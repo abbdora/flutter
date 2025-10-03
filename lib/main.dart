@@ -45,6 +45,12 @@ class _MyHomePageState extends State<MyHomePage> {
               fontSize: 24,
               color: Colors.pinkAccent,
             )),
+            ElevatedButton(onPressed: null,
+              child: const Text("Неактивная кнопка"),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.all(Colors.pink),
+                foregroundColor: WidgetStateProperty.all(Colors.white),
+              ),),
           ],
         ),
       ),
