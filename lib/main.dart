@@ -45,6 +45,10 @@ class _MyHomePageState extends State<MyHomePage> {
               fontSize: 24,
               color: Colors.pinkAccent,
             )),
+            const SizedBox(
+              width: 100,
+              height: 50,
+            ),
             ElevatedButton(onPressed: null,
               child: const Text("Неактивная кнопка"),
               style: ButtonStyle(
