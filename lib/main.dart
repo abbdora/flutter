@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Padding(
-              padding: EdgeInsets.all(10.0),
+              padding: EdgeInsets.all(100.0),
               child: const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -48,12 +48,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.pinkAccent,
                   )),
             ),
-            ElevatedButton(onPressed: null,
-              child: const Text("Неактивная кнопка"),
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(Colors.pink),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
-              ),),
+            Container(
+              padding: EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: ElevatedButton(onPressed: null,
+                child: const Text("Неактивная кнопка"),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.pink),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                ),),
+            ),
           ],
         ),
       ),
