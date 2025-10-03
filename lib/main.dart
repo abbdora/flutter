@@ -39,15 +39,14 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.pinkAccent,
-            )),
-            const SizedBox(
-              width: 100,
-              height: 50,
+            const Padding(
+              padding: EdgeInsets.all(10.0),
+              child: const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.pinkAccent,
+                  )),
             ),
             ElevatedButton(onPressed: null,
               child: const Text("Неактивная кнопка"),
