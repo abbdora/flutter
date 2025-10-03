@@ -39,11 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'Абаренова Дарья Дмитриевна',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const Text('ИКБО-06-22\n22И1556'),
+            const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.pinkAccent,
+            )),
           ],
         ),
       ),
