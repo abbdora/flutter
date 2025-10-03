@@ -36,10 +36,15 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-
+            const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.pinkAccent,
+            )),
             ElevatedButton(onPressed: null,
               child: const Text("Неактивная кнопка"),
               style: ButtonStyle(
