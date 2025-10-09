@@ -44,6 +44,7 @@ class _TasksScreenState extends State<TasksScreen> {
         _tasks.add({
           'name': taskName,
           'completed': false,
+          'id': DateTime.now().millisecondsSinceEpoch,
         });
         _taskController.clear();
       });
@@ -138,33 +139,26 @@ class _TasksScreenState extends State<TasksScreen> {
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 final task = _tasks[index];
-                return Column(
-                  children: [
-                    ListTile(
-                      leading: Checkbox(
-                        value: task['completed'],
-                        onChanged: (value) {
-                          _toggleTask(index);
-                        },
-                      ),
-                      title: Text(
-                        task['name'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _deleteTask(index);
-                        },
-                      ),
+                return ListTile(
+                  key: ValueKey(task['id']),
+                  leading: Checkbox(
+                    value: task['completed'],
+                    onChanged: (value) {
+                      _toggleTask(index);
+                    },
+                  ),
+                  title: Text(
+                    task['name'],
+                    style: const TextStyle(
+                      fontSize: 16,
                     ),
-                    const Divider(
-                      color: Colors.grey,
-                      height: 1,
-                    ),
-                  ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _deleteTask(index);
+                    },
+                  ),
                 );
               },
             ),

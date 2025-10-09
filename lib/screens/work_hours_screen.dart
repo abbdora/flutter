@@ -67,6 +67,12 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
     }
   }
 
+  void _deleteProject(ProjectTime project) {
+    setState(() {
+      _projects.remove(project);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,26 +172,15 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
                 child: Column(
                   children: _projects
                       .map(
-                        (project) => Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.work, color: Colors.blue),
-                          title: Text(project.projectName),
-                          subtitle: Text(_formatTime(project.minutes)),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                _projects.remove(project);
-                              });
-                            },
-                          ),
-                        ),
-                        const Divider(
-                          color: Colors.grey,
-                          height: 1,
-                        ),
-                      ],
+                        (project) => ListTile(
+                      key: ValueKey(project.id),
+                      leading: const Icon(Icons.work, color: Colors.blue),
+                      title: Text(project.projectName),
+                      subtitle: Text(_formatTime(project.minutes)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteProject(project),
+                      ),
                     ),
                   )
                       .toList(),
@@ -222,9 +217,18 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
 class ProjectTime {
   final String projectName;
   final int minutes;
+  final String id;
 
   ProjectTime({
     required this.projectName,
     required this.minutes,
-  });
+  }) : id = DateTime.now().millisecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is ProjectTime && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -44,6 +44,7 @@ class _RatingScreenState extends State<RatingScreen> {
         _comments.add({
           'text': comment,
           'isPositive': isPositive,
+          'id': DateTime.now().millisecondsSinceEpoch,
         });
         _commentController.clear();
       });
@@ -151,6 +152,7 @@ class _RatingScreenState extends State<RatingScreen> {
               itemBuilder: (context, index) {
                 final comment = _comments[index];
                 return ListTile(
+                  key: ValueKey(comment['id']),
                   leading: Icon(
                     comment['isPositive'] ? Icons.thumb_up : Icons.thumb_down,
                     color: comment['isPositive'] ? Colors.green : Colors.red,
