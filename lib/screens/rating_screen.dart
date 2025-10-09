@@ -16,6 +16,8 @@ class RatingScreen extends StatefulWidget {
 
 class _RatingScreenState extends State<RatingScreen> {
   late double _rating;
+  final TextEditingController _commentController = TextEditingController();
+  final List<Map<String, dynamic>> _comments = [];
 
   @override
   void initState() {
@@ -35,6 +37,25 @@ class _RatingScreenState extends State<RatingScreen> {
     });
   }
 
+  void _addComment(bool isPositive) {
+    final comment = _commentController.text.trim();
+    if (comment.isNotEmpty) {
+      setState(() {
+        _comments.add({
+          'text': comment,
+          'isPositive': isPositive,
+        });
+        _commentController.clear();
+      });
+    }
+  }
+
+  void _deleteComment(int index) {
+    setState(() {
+      _comments.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,38 +63,116 @@ class _RatingScreenState extends State<RatingScreen> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Рейтинг'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Рабочий рейтинг:', style: TextStyle(fontSize: 18)),
-            Text(_rating.toStringAsFixed(1),
-                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.pink)),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                ElevatedButton(
-                  onPressed: _decreaseRating,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('-0.1'),
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: _increaseRating,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('+0.1'),
+                const Text('Рабочий рейтинг:', style: TextStyle(fontSize: 18)),
+                Text(_rating.toStringAsFixed(1),
+                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.pink)),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _decreaseRating,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('-0.1'),
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton(
+                      onPressed: _increaseRating,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('+0.1'),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(
+                    hintText: 'Введите плюс или минус',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _addComment(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Добавить плюс'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _addComment(false),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Добавить минус'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          Expanded(
+            child: ListView.separated(
+              itemCount: _comments.length,
+              separatorBuilder: (context, index) => const Divider(
+                color: Colors.grey,
+                height: 1,
+              ),
+              itemBuilder: (context, index) {
+                final comment = _comments[index];
+                return ListTile(
+                  leading: Icon(
+                    comment['isPositive'] ? Icons.thumb_up : Icons.thumb_down,
+                    color: comment['isPositive'] ? Colors.green : Colors.red,
+                  ),
+                  title: Text(
+                    comment['text'],
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _deleteComment(index);
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: ElevatedButton(
               onPressed: () {
                 widget.onRatingUpdated(_rating);
                 Navigator.pop(context);
@@ -84,9 +183,15 @@ class _RatingScreenState extends State<RatingScreen> {
               ),
               child: const Text('Назад'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 }
