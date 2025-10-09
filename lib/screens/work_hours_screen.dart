@@ -16,6 +16,10 @@ class WorkHoursScreen extends StatefulWidget {
 
 class _WorkHoursScreenState extends State<WorkHoursScreen> {
   late int _workHours;
+  final TextEditingController _projectController = TextEditingController();
+  final TextEditingController _hoursController = TextEditingController();
+  final TextEditingController _minutesController = TextEditingController();
+  final List<ProjectTime> _projects = [];
 
   @override
   void initState() {
@@ -38,7 +42,29 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
   String _formatTime(int minutes) {
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
+    if (hours == 0) return '${mins}м';
+    if (mins == 0) return '${hours}ч';
     return '${hours}ч ${mins}м';
+  }
+
+  void _addProject() {
+    final projectName = _projectController.text.trim();
+    final hours = int.tryParse(_hoursController.text) ?? 0;
+    final minutes = int.tryParse(_minutesController.text) ?? 0;
+
+    if (projectName.isNotEmpty && (hours > 0 || minutes > 0)) {
+      final totalMinutes = hours * 60 + minutes;
+
+      setState(() {
+        _projects.add(ProjectTime(
+          projectName: projectName,
+          minutes: totalMinutes,
+        ));
+        _projectController.clear();
+        _hoursController.clear();
+        _minutesController.clear();
+      });
+    }
   }
 
   @override
@@ -56,6 +82,61 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
             Text(_formatTime(_workHours),
                 style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.pink)),
             const SizedBox(height: 30),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _projectController,
+                decoration: const InputDecoration(
+                  hintText: 'Название проекта',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _hoursController,
+                      decoration: const InputDecoration(
+                        hintText: 'Часы',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: TextField(
+                      controller: _minutesController,
+                      decoration: const InputDecoration(
+                        hintText: 'Минуты',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  ElevatedButton(
+                    onPressed: _addProject,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    ),
+                    child: const Text('Добавить'),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -79,6 +160,39 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
               ],
             ),
             const SizedBox(height: 20),
+
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: _projects
+                      .map(
+                        (project) => Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.work, color: Colors.blue),
+                          title: Text(project.projectName),
+                          subtitle: Text(_formatTime(project.minutes)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                _projects.remove(project);
+                              });
+                            },
+                          ),
+                        ),
+                        const Divider(
+                          color: Colors.grey,
+                          height: 1,
+                        ),
+                      ],
+                    ),
+                  )
+                      .toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 widget.onHoursUpdated(_workHours);
@@ -95,4 +209,22 @@ class _WorkHoursScreenState extends State<WorkHoursScreen> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _projectController.dispose();
+    _hoursController.dispose();
+    _minutesController.dispose();
+    super.dispose();
+  }
+}
+
+class ProjectTime {
+  final String projectName;
+  final int minutes;
+
+  ProjectTime({
+    required this.projectName,
+    required this.minutes,
+  });
 }
