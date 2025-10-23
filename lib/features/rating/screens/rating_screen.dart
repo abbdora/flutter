@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class RatingScreen extends StatefulWidget {
@@ -18,6 +19,8 @@ class _RatingScreenState extends State<RatingScreen> {
   late double _rating;
   final TextEditingController _commentController = TextEditingController();
   final List<Map<String, dynamic>> _comments = [];
+
+  String _url = 'https://formulaznaniy.ru/images/20160823/57bc3523d002a.jpg';
 
   @override
   void initState() {
@@ -70,6 +73,45 @@ class _RatingScreenState extends State<RatingScreen> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
+                Container(
+                  width: 350,
+                  height: 255,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: CachedNetworkImage(
+                      imageUrl: _url,
+                      fit: BoxFit.contain,
+                      progressIndicatorBuilder: (context, url, progress) =>
+                          Container(
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[100],
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error,
+                                color: Colors.red,
+                                size: 24,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Ошибка',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 const Text('Рабочий рейтинг:', style: TextStyle(fontSize: 18)),
                 Text(_rating.toStringAsFixed(1),
                     style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.pink)),
