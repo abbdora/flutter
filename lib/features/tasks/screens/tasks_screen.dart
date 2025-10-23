@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class TasksScreen extends StatefulWidget {
   final int currentTasks;
@@ -19,6 +20,7 @@ class _TasksScreenState extends State<TasksScreen> {
   final TextEditingController _taskController = TextEditingController();
   final List<Map<String, dynamic>> _tasks = [];
 
+  final String _fixedImageUrl = 'https://1gai.ru/uploads/posts/2020-01/1580109107_885544.jpg';
   @override
   void initState() {
     super.initState();
@@ -72,6 +74,50 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       body: Column(
         children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Container(
+                width: 350,
+                height: 255,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: CachedNetworkImage(
+                    imageUrl: _fixedImageUrl,
+                    fit: BoxFit.contain,
+                    progressIndicatorBuilder: (context, url, progress) =>
+                        Container(
+                          color: Colors.grey[100],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[100],
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error,
+                              color: Colors.red,
+                              size: 24,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Ошибка',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           Container(
             padding: const EdgeInsets.all(20),
             child: Column(
