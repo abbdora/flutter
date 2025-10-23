@@ -1,8 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:test_aapp/screens/project_screen.dart';
-import 'package:test_aapp/screens/rating_screen.dart';
-import 'package:test_aapp/screens/tasks_screen.dart';
-import 'package:test_aapp/screens/work_hours_screen.dart';
+import 'package:test_aapp/features/project/screens/project_screen.dart';
+import 'package:test_aapp/features/rating/screens/rating_screen.dart';
+import 'package:test_aapp/features/tasks/screens/tasks_screen.dart';
+import 'package:test_aapp/features/hours/screens/hours_screen.dart';
+
+import 'features/hours/models/hour.dart';
+import 'features/hours/screens/hour_form_screen.dart';
+import 'features/hours/state/hours_container.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,6 +41,17 @@ class _MyHomePageState extends State<MyHomePage> {
   double workRating = 4.2;
   String currentProject = "Flutter";
   int workHours = 120;
+
+  String _url = 'https://foni.papik.pro/uploads/posts/2024-10/foni-papik-pro-v0do-p-kartinki-ofisnii-rabotnik-na-prozrachnom-f-14.png';
+
+  final List<Hour> hoursList = [
+    Hour(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      projectName: 'Проект на Flutter',
+      hours: 3,
+      minutes: 30,
+    ),
+  ];
 
   void _changeStatus() {
     setState(() {
@@ -84,13 +100,52 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Абаренова Дарья Дмитриевна\nИКБО-06-22\n22И1556',
+            const Text('Абаренова Дарья Дмитриевна',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
                   color: Colors.pinkAccent,
                 )),
-            const SizedBox(height: 30),
+            const SizedBox(height: 50),
+
+            Container(
+              width: 350,
+              height: 255,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: CachedNetworkImage(
+                  imageUrl: _url,
+                  fit: BoxFit.contain,
+                  progressIndicatorBuilder: (context, url, progress) =>
+                      Container(
+                        color: Colors.grey[100],
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[100],
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error,
+                            color: Colors.red,
+                            size: 24,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Ошибка',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
             // Статус работы
             Container(
@@ -177,10 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => WorkHoursScreen(
-                    currentHours: workHours,
-                    onHoursUpdated: _updateWorkHours,
-                  )),
+                  MaterialPageRoute(builder: (context) => const HoursContainer()),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -188,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
-              child: Text('Рабочее время (${_formatTime(workHours)})'),
+              child: const Text('Учёт рабочего времени'),
             ),
           ],
         ),
