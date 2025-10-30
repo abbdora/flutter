@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-
-import '../../tasks/screens/tasks_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectScreen extends StatefulWidget {
   final String currentProject;
@@ -36,17 +35,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
     });
   }
 
-  void _navigateToProjectTasks(BuildContext context) async {
-    final int? tasksCount = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const TasksScreen()),
-    );
-
-    if (tasksCount != null) {
-      setState(() {
-        _tasksCount = tasksCount;
-      });
-    }
+  void _navigateToProjectTasks(BuildContext context) {
+    context.go('/project/tasks');
   }
 
   @override
