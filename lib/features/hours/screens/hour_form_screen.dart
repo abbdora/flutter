@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/hour.dart';
 
 class HourFormScreen extends StatefulWidget {
-  final void Function(Hour hour) onSave;
-  final VoidCallback onCancel;
-
-  const HourFormScreen({
-    super.key,
-    required this.onSave,
-    required this.onCancel,
-  });
+  const HourFormScreen({super.key});
 
   @override
   State<HourFormScreen> createState() => _HourFormScreenState();
@@ -32,10 +25,7 @@ class _HourFormScreenState extends State<HourFormScreen> {
         hours: hours,
         minutes: minutes,
       );
-      widget.onSave(hour);
-      _projectController.clear();
-      _hoursController.clear();
-      _minutesController.clear();
+      Navigator.pop(context, hour);
     }
   }
 
@@ -48,7 +38,7 @@ class _HourFormScreenState extends State<HourFormScreen> {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: widget.onCancel,
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: Padding(

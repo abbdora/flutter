@@ -2,17 +2,17 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/hour.dart';
 import '../widgets/hour_table.dart';
+import 'hour_form_screen.dart';
 
 class HoursScreen extends StatelessWidget {
   final List<Hour> hours;
-  final VoidCallback onAddTap;
+  final ValueChanged<Hour> onHourAdded;
   final ValueChanged<String> onRemove;
-
 
   const HoursScreen({
     super.key,
     required this.hours,
-    required this.onAddTap,
+    required this.onHourAdded,
     required this.onRemove,
   });
 
@@ -26,20 +26,27 @@ class HoursScreen extends StatelessWidget {
     return '${h}ч ${m}м';
   }
 
+  void _navigateToForm(BuildContext context) async {
+    final Hour? newHour = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const HourFormScreen()),
+    );
+
+    if (newHour != null) {
+      onHourAdded(newHour);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String _url = 'https://images-cdn.onlinetestpad.net/fc/49/c773895c4abaa1638494862748dc.jpg';
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Учёт рабочего времени'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   width: 200,
@@ -105,7 +112,7 @@ class HoursScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: onAddTap,
+              onPressed: () => _navigateToForm(context),
               icon: const Icon(Icons.add),
               label: const Text('Добавить проект'),
               style: ElevatedButton.styleFrom(
