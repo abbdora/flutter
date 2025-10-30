@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:test_aapp/features/project/screens/project_screen.dart';
 import 'package:test_aapp/features/rating/screens/rating_screen.dart';
 import 'package:test_aapp/features/tasks/screens/tasks_screen.dart';
@@ -8,6 +9,7 @@ import 'package:test_aapp/features/hours/screens/hours_screen.dart';
 import 'features/hours/models/hour.dart';
 import 'features/hours/screens/hour_form_screen.dart';
 import 'features/hours/state/hours_container.dart';
+import 'app_router.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,14 +17,15 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MainScreen(initialIndex: 0),
+      routerConfig: appRouter,
     );
   }
 }
@@ -46,20 +49,27 @@ class _MainScreenState extends State<MainScreen> {
     'Учёт времени'
   ];
 
+  // Соответствие между индексами и путями
+  final List<String> _routes = [
+    '/profile',
+    '/rating',
+    '/project',
+    '/hours'
+  ];
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
   }
 
-  void _onItemTapped(int index) {
+  // ОБНОВЛЕНО: Навигация через GoRouter с обновлением состояния
+  void _onItemTapped(int index, BuildContext context) {
     if (index != _currentIndex) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MainScreen(initialIndex: index),
-        ),
-      );
+      setState(() {
+        _currentIndex = index;
+      });
+      context.go(_routes[index]);
     }
   }
 
@@ -94,7 +104,7 @@ class _MainScreenState extends State<MainScreen> {
       body: _getCurrentScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: _onItemTapped,
+        onTap: (index) => _onItemTapped(index, context), // Передаем context
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
@@ -119,6 +129,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
+// Остальной код ProfileScreen остается без изменений
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -231,7 +242,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 30),
-
           ],
         ),
       ),
