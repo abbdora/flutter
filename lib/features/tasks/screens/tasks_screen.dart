@@ -2,42 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class TasksScreen extends StatefulWidget {
-  final int currentTasks;
-  final Function(int) onTasksUpdated;
-
-  const TasksScreen({
-    super.key,
-    required this.currentTasks,
-    required this.onTasksUpdated,
-  });
+  const TasksScreen({super.key});
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
 class _TasksScreenState extends State<TasksScreen> {
-  late int _tasksCompleted;
   final TextEditingController _taskController = TextEditingController();
   final List<Map<String, dynamic>> _tasks = [];
 
   final String _fixedImageUrl = 'https://1gai.ru/uploads/posts/2020-01/1580109107_885544.jpg';
-  @override
-  void initState() {
-    super.initState();
-    _tasksCompleted = widget.currentTasks;
-  }
-
-  void _addTask() {
-    setState(() {
-      if (_tasksCompleted < 10) _tasksCompleted++;
-    });
-  }
-
-  void _removeTask() {
-    setState(() {
-      if (_tasksCompleted > 0) _tasksCompleted--;
-    });
-  }
 
   void _addNewTask() {
     final taskName = _taskController.text.trim();
@@ -65,12 +40,25 @@ class _TasksScreenState extends State<TasksScreen> {
     });
   }
 
+  int _getTasksCount() {
+    return _tasks.length;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tasksCount = _getTasksCount();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Задачи'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Задачи проектов'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, tasksCount);
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -122,31 +110,18 @@ class _TasksScreenState extends State<TasksScreen> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                const Text('Выполнено задач:', style: TextStyle(fontSize: 18)),
-                Text('$_tasksCompleted/10',
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.pink)),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _removeTask,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('-1'),
-                    ),
-                    const SizedBox(width: 20),
-                    ElevatedButton(
-                      onPressed: _addTask,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('+1'),
-                    ),
-                  ],
+                const Text(
+                  'Количество задач:',
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$tasksCount',
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
                 ),
               ],
             ),
@@ -160,8 +135,9 @@ class _TasksScreenState extends State<TasksScreen> {
                   child: TextField(
                     controller: _taskController,
                     decoration: const InputDecoration(
-                      hintText: 'Введите задачу',
+                      hintText: 'Введите задачу проекта',
                       border: OutlineInputBorder(),
+                      labelText: 'Новая задача',
                     ),
                   ),
                 ),
@@ -181,47 +157,53 @@ class _TasksScreenState extends State<TasksScreen> {
           const SizedBox(height: 20),
 
           Expanded(
-            child: ListView.builder(
+            child: _tasks.isEmpty
+                ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.task, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Задачи проекта отсутствуют',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  Text(
+                    'Добавьте первую задачу',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+                : ListView.builder(
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 final task = _tasks[index];
-                return ListTile(
-                  key: ValueKey(task['id']),
-                  leading: Checkbox(
-                    value: task['completed'],
-                    onChanged: (value) {
-                      _toggleTask(index);
-                    },
-                  ),
-                  title: Text(
-                    task['name'],
-                    style: const TextStyle(
-                      fontSize: 16,
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: ListTile(
+                    key: ValueKey(task['id']),
+                    leading: Checkbox(
+                      value: task['completed'],
+                      onChanged: (value) {
+                        _toggleTask(index);
+                      },
                     ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      _deleteTask(index);
-                    },
+                    title: Text(
+                      task['name'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        _deleteTask(index);
+                      },
+                    ),
                   ),
                 );
               },
-            ),
-          ),
-
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onTasksUpdated(_tasksCompleted);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.pink,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Назад'),
             ),
           ),
         ],
