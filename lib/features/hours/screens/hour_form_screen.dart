@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/hour.dart';
 
 class HourFormScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _HourFormScreenState extends State<HourFormScreen> {
         hours: hours,
         minutes: minutes,
       );
-      Navigator.pop(context, hour);
+      context.pop(hour);
     }
   }
 
@@ -38,7 +39,7 @@ class _HourFormScreenState extends State<HourFormScreen> {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(

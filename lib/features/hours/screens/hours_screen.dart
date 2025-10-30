@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/hour.dart';
 import '../widgets/hour_table.dart';
-import 'hour_form_screen.dart';
 
 class HoursScreen extends StatelessWidget {
   final List<Hour> hours;
@@ -26,15 +26,8 @@ class HoursScreen extends StatelessWidget {
     return '${h}ч ${m}м';
   }
 
-  void _navigateToForm(BuildContext context) async {
-    final Hour? newHour = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const HourFormScreen()),
-    );
-
-    if (newHour != null) {
-      onHourAdded(newHour);
-    }
+  void _navigateToForm(BuildContext context) {
+    context.go('/hours/form');
   }
 
   @override
@@ -133,4 +126,3 @@ class HoursScreen extends StatelessWidget {
     );
   }
 }
-
