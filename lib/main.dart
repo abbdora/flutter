@@ -22,20 +22,111 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MainScreen(initialIndex: 0),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+class MainScreen extends StatefulWidget {
+  final int initialIndex;
+
+  const MainScreen({super.key, required this.initialIndex});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MainScreenState extends State<MainScreen> {
+  late int _currentIndex;
+
+  final List<String> _appBarTitles = [
+    'Профиль',
+    'Рейтинг',
+    'Проект',
+    'Учёт времени'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  void _onItemTapped(int index) {
+    if (index != _currentIndex) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MainScreen(initialIndex: index),
+        ),
+      );
+    }
+  }
+
+  Widget _getCurrentScreen() {
+    switch (_currentIndex) {
+      case 0:
+        return const ProfileScreen();
+      case 1:
+        return RatingScreen(
+          currentRating: 4.2,
+          onRatingUpdated: (newRating) {},
+        );
+      case 2:
+        return ProjectScreen(
+          currentProject: "Flutter",
+          onProjectUpdated: (newProject) {},
+        );
+      case 3:
+        return const HoursContainer();
+      default:
+        return const ProfileScreen();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(_appBarTitles[_currentIndex]),
+      ),
+      body: _getCurrentScreen(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Профиль',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Рейтинг',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.work),
+            label: 'Проект',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.access_time),
+            label: 'Время',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   String workStatus = "Безработный";
   int completedTasks = 3;
   double workRating = 4.2;
@@ -65,38 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _updateTasks(int newTasks) {
-    setState(() {
-      completedTasks = newTasks;
-    });
-  }
-
-  void _updateRating(double newRating) {
-    setState(() {
-      workRating = newRating;
-    });
-  }
-
-  void _updateProject(String newProject) {
-    setState(() {
-      currentProject = newProject;
-    });
-  }
-
-  void _updateWorkHours(int newHours) {
-    setState(() {
-      workHours = newHours;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
+    return SingleChildScrollView(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -147,7 +210,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
 
-            // Статус работы
             Container(
               margin: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
@@ -170,87 +232,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 30),
 
-            // Кнопки навигации
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TasksScreen(
-                    currentTasks: completedTasks,
-                    onTasksUpdated: _updateTasks,
-                  )),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              ),
-              child: Text('Задачи ($completedTasks/10)'),
-            ),
-            const SizedBox(height: 15),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RatingScreen(
-                    currentRating: workRating,
-                    onRatingUpdated: _updateRating,
-                  )),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              ),
-              child: Text('Рейтинг (${workRating.toStringAsFixed(1)})'),
-            ),
-            const SizedBox(height: 15),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProjectScreen(
-                    currentProject: currentProject,
-                    onProjectUpdated: _updateProject,
-                  )),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              ),
-              child: Text('Проект: $currentProject'),
-            ),
-            const SizedBox(height: 15),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HoursContainer()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              ),
-              child: const Text('Учёт рабочего времени'),
-            ),
           ],
         ),
       ),
     );
-  }
-
-  String _formatTime(int minutes) {
-    final hours = minutes ~/ 60;
-    final mins = minutes % 60;
-    return '${hours}ч ${mins}м';
   }
 }
