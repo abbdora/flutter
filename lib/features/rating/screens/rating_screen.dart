@@ -2,21 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class RatingScreen extends StatefulWidget {
-  final double currentRating;
-  final Function(double) onRatingUpdated;
-
-  const RatingScreen({
-    super.key,
-    required this.currentRating,
-    required this.onRatingUpdated,
-  });
+  const RatingScreen({super.key});
 
   @override
   State<RatingScreen> createState() => _RatingScreenState();
 }
 
 class _RatingScreenState extends State<RatingScreen> {
-  late double _rating;
+  double _rating = 4.2;
   final TextEditingController _commentController = TextEditingController();
   final List<Map<String, dynamic>> _comments = [];
 
@@ -25,7 +18,6 @@ class _RatingScreenState extends State<RatingScreen> {
   @override
   void initState() {
     super.initState();
-    _rating = widget.currentRating;
   }
 
   void _increaseRating() {
@@ -64,8 +56,12 @@ class _RatingScreenState extends State<RatingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.green,
         title: const Text('Рейтинг'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -112,6 +108,7 @@ class _RatingScreenState extends State<RatingScreen> {
                   ),
                 ),
 
+                const SizedBox(height: 20),
                 const Text('Рабочий рейтинг:', style: TextStyle(fontSize: 18)),
                 Text(_rating.toStringAsFixed(1),
                     style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.pink)),
@@ -211,21 +208,6 @@ class _RatingScreenState extends State<RatingScreen> {
                   ),
                 );
               },
-            ),
-          ),
-
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onRatingUpdated(_rating);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.pink,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Назад'),
             ),
           ),
         ],

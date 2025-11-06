@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:test_aapp/features/project/screens/project_screen.dart';
-import 'package:test_aapp/features/rating/screens/rating_screen.dart';
-import 'package:test_aapp/features/tasks/screens/tasks_screen.dart';
-import 'package:test_aapp/features/hours/screens/hours_screen.dart';
-
-import 'features/hours/models/hour.dart';
-import 'features/hours/screens/hour_form_screen.dart';
-import 'features/hours/state/hours_container.dart';
-import 'app_router.dart';
+import 'features/hours/screens/hours_screen.dart';
+import 'features/intro/intro_screen.dart';
+import 'features/project/screens/project_screen.dart';
+import 'features/rating/screens/rating_screen.dart';
+import 'features/tasks/screens/tasks_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,140 +15,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Flutter Demo',
+    return MaterialApp(
+      title: 'Рабочее портфолио',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
-      routerConfig: appRouter,
+      home: const IntroScreen(),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  final int initialIndex;
-
-  const MainScreen({super.key, required this.initialIndex});
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late int _currentIndex;
-
-  final List<String> _appBarTitles = [
-    'Профиль',
-    'Рейтинг',
-    'Проект',
-    'Учёт времени'
-  ];
-
-  // Соответствие между индексами и путями
-  final List<String> _routes = [
-    '/profile',
-    '/rating',
-    '/project',
-    '/hours'
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-  }
-
-  // ОБНОВЛЕНО: Навигация через GoRouter с обновлением состояния
-  void _onItemTapped(int index, BuildContext context) {
-    if (index != _currentIndex) {
-      setState(() {
-        _currentIndex = index;
-      });
-      context.go(_routes[index]);
-    }
-  }
-
-  Widget _getCurrentScreen() {
-    switch (_currentIndex) {
-      case 0:
-        return const ProfileScreen();
-      case 1:
-        return RatingScreen(
-          currentRating: 4.2,
-          onRatingUpdated: (newRating) {},
-        );
-      case 2:
-        return ProjectScreen(
-          currentProject: "Flutter",
-          onProjectUpdated: (newProject) {},
-        );
-      case 3:
-        return const HoursContainer();
-      default:
-        return const ProfileScreen();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(_appBarTitles[_currentIndex]),
-      ),
-      body: _getCurrentScreen(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => _onItemTapped(index, context), // Передаем context
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Профиль',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Рейтинг',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'Проект',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.access_time),
-            label: 'Время',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Остальной код ProfileScreen остается без изменений
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
   String workStatus = "Безработный";
-  int completedTasks = 3;
-  double workRating = 4.2;
-  String currentProject = "Flutter";
-  int workHours = 120;
-
-  String _url = 'https://foni.papik.pro/uploads/posts/2024-10/foni-papik-pro-v0do-p-kartinki-ofisnii-rabotnik-na-prozrachnom-f-14.png';
-
-  final List<Hour> hoursList = [
-    Hour(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      projectName: 'Проект на Flutter',
-      hours: 3,
-      minutes: 30,
-    ),
-  ];
+  String _url = 'https://www.budgetnik.ru/images/news/103986/sovmeshhenie.png';
 
   void _changeStatus() {
     setState(() {
@@ -169,19 +51,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('Абаренова Дарья Дмитриевна',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.pinkAccent,
-                )),
-            const SizedBox(height: 50),
-
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Главный экран'),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            tooltip: 'Выход',
+            icon: const Icon(Icons.logout),
+            onPressed: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => const IntroScreen(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: ListView(
+          children: [
             Container(
               width: 350,
               height: 255,
@@ -190,29 +80,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: CachedNetworkImage(
                   imageUrl: _url,
                   fit: BoxFit.contain,
-                  progressIndicatorBuilder: (context, url, progress) =>
-                      Container(
-                        color: Colors.grey[100],
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
+                  progressIndicatorBuilder:
+                      (context, url, progress) => Container(
+                    color: Colors.grey[100],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[100],
                     child: const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.error,
-                            color: Colors.red,
-                            size: 24,
-                          ),
+                          Icon(Icons.error, color: Colors.red, size: 24),
                           SizedBox(height: 4),
-                          Text(
-                            'Ошибка',
-                            style: TextStyle(fontSize: 10),
-                          ),
+                          Text('Ошибка', style: TextStyle(fontSize: 10)),
                         ],
                       ),
                     ),
@@ -221,27 +102,141 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
+            const SizedBox(height: 24),
+
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Статус:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 10),
-                  Text(workStatus, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Текущий статус:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        workStatus,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
                   ElevatedButton(
                     onPressed: _changeStatus,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
+                      backgroundColor: Colors.deepPurple,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: const Text('Сменить'),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Разделы',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RatingScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.star_border, size: 28),
+              label: const Text('Экран рейтинга', style: TextStyle(fontSize: 20)),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProjectScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.work_outline, size: 28),
+              label: const Text('Экран проекта', style: TextStyle(fontSize: 20)),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const HoursScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.access_time, size: 28),
+              label: const Text('Экран учёта времени', style: TextStyle(fontSize: 20)),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TasksScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.task_alt_outlined, size: 28),
+              label: const Text('Экран задач', style: TextStyle(fontSize: 20)),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
           ],
         ),
       ),

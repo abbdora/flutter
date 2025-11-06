@@ -1,16 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../tasks/screens/tasks_screen.dart';
 
 class ProjectScreen extends StatefulWidget {
-  final String currentProject;
-  final Function(String) onProjectUpdated;
-
-  const ProjectScreen({
-    super.key,
-    required this.currentProject,
-    required this.onProjectUpdated,
-  });
+  const ProjectScreen({super.key});
 
   @override
   State<ProjectScreen> createState() => _ProjectScreenState();
@@ -23,7 +17,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
   @override
   void initState() {
     super.initState();
-    _project = widget.currentProject;
+    _project = "Flutter";
   }
 
   void _nextProject() {
@@ -36,7 +30,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 
   void _navigateToProjectTasks(BuildContext context) {
-    context.go('/project/tasks');
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const TasksScreen()),
+    );
   }
 
   @override
@@ -44,6 +40,14 @@ class _ProjectScreenState extends State<ProjectScreen> {
     const String _url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ8nqfnmxH7hXRfEUDHi2JtMDf3_Ox69iS2g&s';
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.pink,
+        title: const Text('Проекты'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -166,3 +170,4 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
   }
 }
+

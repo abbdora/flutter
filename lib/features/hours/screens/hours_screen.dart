@@ -1,22 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../models/hour.dart';
 import '../widgets/hour_table.dart';
+import 'hour_form_screen.dart';
 
-class HoursScreen extends StatelessWidget {
-  final List<Hour> hours;
-  final ValueChanged<Hour> onHourAdded;
-  final ValueChanged<String> onRemove;
+class HoursScreen extends StatefulWidget {
+  const HoursScreen({super.key});
 
-  const HoursScreen({
-    super.key,
-    required this.hours,
-    required this.onHourAdded,
-    required this.onRemove,
-  });
+  @override
+  State<HoursScreen> createState() => _HoursScreenState();
+}
 
-  int get totalMinutes => hours.fold(0, (sum, h) => sum + h.hours * 60 + h.minutes);
+class _HoursScreenState extends State<HoursScreen> {
+  final List<Hour> _hours = [];
+
+  int get totalMinutes => _hours.fold(0, (sum, h) => sum + h.hours * 60 + h.minutes);
 
   String _formatTotalTime() {
     final h = totalMinutes ~/ 60;
@@ -27,13 +25,36 @@ class HoursScreen extends StatelessWidget {
   }
 
   void _navigateToForm(BuildContext context) {
-    context.go('/hours/form');
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const HourFormScreen()),
+    );
+  }
+
+  void _onHourAdded(Hour hour) {
+    setState(() {
+      _hours.add(hour);
+    });
+  }
+
+  void _onRemove(String id) {
+    setState(() {
+      _hours.removeWhere((hour) => hour.id == id);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     String _url = 'https://images-cdn.onlinetestpad.net/fc/49/c773895c4abaa1638494862748dc.jpg';
+
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: const Text('Учёт времени'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -116,8 +137,8 @@ class HoursScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Expanded(
               child: HoursTable(
-                hours: hours,
-                onRemove: onRemove,
+                hours: _hours,
+                onRemove: _onRemove,
               ),
             ),
           ],
