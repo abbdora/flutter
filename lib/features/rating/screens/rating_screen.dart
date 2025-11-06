@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class RatingScreen extends StatefulWidget {
   const RatingScreen({super.key});
@@ -60,7 +61,7 @@ class _RatingScreenState extends State<RatingScreen> {
         title: const Text('Рейтинг'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Column(

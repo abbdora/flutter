@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/hour.dart';
 import '../widgets/hour_table.dart';
 import 'hour_form_screen.dart';
@@ -52,7 +53,7 @@ class _HoursScreenState extends State<HoursScreen> {
         title: const Text('Учёт времени'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(

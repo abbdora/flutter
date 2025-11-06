@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -54,7 +55,7 @@ class _TasksScreenState extends State<TasksScreen> {
         title: const Text('Задачи проектов'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Column(

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'features/hours/screens/hours_screen.dart';
-import 'features/intro/intro_screen.dart';
-import 'features/project/screens/project_screen.dart';
-import 'features/rating/screens/rating_screen.dart';
-import 'features/tasks/screens/tasks_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'app_router.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,13 +12,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Рабочее портфолио',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const IntroScreen(),
+      routerConfig: appRouter,
     );
   }
 }
@@ -60,11 +57,7 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             tooltip: 'Выход',
             icon: const Icon(Icons.logout),
-            onPressed: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => const IntroScreen(),
-              ),
-            ),
+            onPressed: () => context.pushReplacement('/intro'),
           ),
         ],
       ),
@@ -164,11 +157,7 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const RatingScreen(),
-                ),
-              ),
+              onPressed: () => context.push('/main/rating'),
               icon: const Icon(Icons.star_border, size: 28),
               label: const Text('Экран рейтинга', style: TextStyle(fontSize: 20)),
               style: ElevatedButton.styleFrom(
@@ -183,11 +172,7 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ProjectScreen(),
-                ),
-              ),
+              onPressed: () => context.push('/main/project'),
               icon: const Icon(Icons.work_outline, size: 28),
               label: const Text('Экран проекта', style: TextStyle(fontSize: 20)),
               style: ElevatedButton.styleFrom(
@@ -202,11 +187,7 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const HoursScreen(),
-                ),
-              ),
+              onPressed: () => context.push('/main/hours'),
               icon: const Icon(Icons.access_time, size: 28),
               label: const Text('Экран учёта времени', style: TextStyle(fontSize: 20)),
               style: ElevatedButton.styleFrom(
@@ -221,11 +202,7 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const TasksScreen(),
-                ),
-              ),
+              onPressed: () => context.push('/main/tasks'),
               icon: const Icon(Icons.task_alt_outlined, size: 28),
               label: const Text('Экран задач', style: TextStyle(fontSize: 20)),
               style: ElevatedButton.styleFrom(

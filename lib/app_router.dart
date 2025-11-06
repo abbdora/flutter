@@ -1,57 +1,41 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_aapp/main.dart';
-import 'package:test_aapp/features/hours/screens/hour_form_screen.dart';
-
+import 'features/hours/screens/hours_screen.dart';
+import 'features/intro/intro_screen.dart';
+import 'features/project/screens/project_screen.dart';
+import 'features/rating/screens/rating_screen.dart';
 import 'features/tasks/screens/tasks_screen.dart';
+import 'main.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/profile',
+  initialLocation: '/intro',
   routes: [
     GoRoute(
       path: '/',
-      redirect: (context, state) => '/profile',
-    ),
-
-    GoRoute(
-      path: '/profile',
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: const MainScreen(initialIndex: 0),
-      ),
+      redirect: (context, state) => '/intro',
     ),
     GoRoute(
-      path: '/rating',
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: const MainScreen(initialIndex: 1),
-      ),
+      path: '/intro',
+      builder: (context, state) => const IntroScreen(),
     ),
-
     GoRoute(
-      path: '/project',
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: const MainScreen(initialIndex: 2),
-      ),
+      path: '/main',
+      builder: (context, state) => const MainScreen(),
       routes: [
+        GoRoute(
+          path: 'rating',
+          builder: (context, state) => const RatingScreen(),
+        ),
+        GoRoute(
+          path: 'project',
+          builder: (context, state) => const ProjectScreen(),
+        ),
+        GoRoute(
+          path: 'hours',
+          builder: (context, state) => const HoursScreen(),
+        ),
         GoRoute(
           path: 'tasks',
-          pageBuilder: (context, state) => MaterialPage(
-            child: const TasksScreen(),
-          ),
-        ),
-      ],
-    ),
-
-    GoRoute(
-      path: '/hours',
-      pageBuilder: (context, state) => NoTransitionPage(
-        child: const MainScreen(initialIndex: 3),
-      ),
-      routes: [
-        GoRoute(
-          path: 'form',
-          pageBuilder: (context, state) => MaterialPage(
-            child: const HourFormScreen(),
-          ),
+          builder: (context, state) => const TasksScreen(),
         ),
       ],
     ),
