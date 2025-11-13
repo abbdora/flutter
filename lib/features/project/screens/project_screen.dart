@@ -1,12 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app_state.dart';
+import '../../../service_locator.dart';
 import '../../tasks/screens/tasks_screen.dart';
 
-class ProjectScreen extends StatelessWidget {
+class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
 
+  @override
+  State<ProjectScreen> createState() => _ProjectScreenState();
+}
+
+class _ProjectScreenState extends State<ProjectScreen> {
   void _navigateToProjectTasks(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const TasksScreen()),
@@ -15,7 +20,15 @@ class ProjectScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appState = AppState.of(context);
+    String projectText = '';
+
+    if (locator.isRegistered<AppStateService>()) {
+      final appStateService = locator.get<AppStateService>();
+      projectText = '${appStateService.currentProject}';
+    } else {
+      print('Ошибка: AppStateService не зарегистрирован в GetIt!');
+    }
+
     const String _url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ8nqfnmxH7hXRfEUDHi2JtMDf3_Ox69iS2g&s';
 
     return Scaffold(
@@ -37,7 +50,7 @@ class ProjectScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                      appState.currentProject,
+                      projectText,
                       style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.pink)
                   ),
                   Container(
@@ -101,7 +114,14 @@ class ProjectScreen extends StatelessWidget {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                appState.onNextProject();
+                setState(() {
+                  if (locator.isRegistered<AppStateService>()) {
+                    final appStateService = locator.get<AppStateService>();
+                    appStateService.nextProject();
+                  } else {
+                    print('Ошибка: AppStateService не зарегистрирован в GetIt!');
+                  }
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink,

@@ -2,68 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'app_router.dart';
-import 'app_state.dart';
+import 'service_locator.dart';
 
 void main() {
+  setupLocator();
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String workStatus = "Безработный";
-  String currentProject = "Flutter";
-  final List<String> projects = ["Flutter", "Java", "Python", "Базы данных", "Сети"];
-
-  void _changeStatus() {
-    setState(() {
-      if (workStatus == "Безработный") {
-        workStatus = "Самозанятый";
-      } else if (workStatus == "Самозанятый") {
-        workStatus = "Официально трудоустроен";
-      } else {
-        workStatus = "Безработный";
-      }
-    });
-  }
-
-  void _nextProject() {
-    setState(() {
-      final currentIndex = projects.indexOf(currentProject);
-      currentProject = projects[(currentIndex + 1) % projects.length];
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AppState(
-      workStatus: workStatus,
-      currentProject: currentProject,
-      onChangeStatus: _changeStatus,
-      onNextProject: _nextProject,
-      child: MaterialApp.router(
-        title: 'Рабочее портфолио',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        routerConfig: appRouter,
+    return MaterialApp.router(
+      title: 'Рабочее портфолио',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
+      routerConfig: appRouter,
     );
   }
 }
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  @override
   Widget build(BuildContext context) {
-    final appState = AppState.of(context);
+    final appState = locator<AppStateService>();
     final String _url = 'https://www.budgetnik.ru/images/news/103986/sovmeshhenie.png';
 
     return Scaffold(
@@ -138,7 +110,7 @@ class MainScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        appState.workStatus,
+                        "Безработный",
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.black87,
@@ -147,7 +119,8 @@ class MainScreen extends StatelessWidget {
                     ],
                   ),
                   ElevatedButton(
-                    onPressed: appState.onChangeStatus,
+                    onPressed: () {
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
                       foregroundColor: Colors.white,
@@ -192,6 +165,21 @@ class MainScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pink,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Обновить'),
                   ),
                 ],
               ),
