@@ -2,37 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'app_router.dart';
+import 'app_state.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Рабочее портфолио',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      routerConfig: appRouter,
-    );
-  }
+  State<MyApp> createState() => _MyAppState();
 }
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
+class _MyAppState extends State<MyApp> {
   String workStatus = "Безработный";
-  String _url = 'https://www.budgetnik.ru/images/news/103986/sovmeshhenie.png';
+  String currentProject = "Flutter";
+  final List<String> projects = ["Flutter", "Java", "Python", "Базы данных", "Сети"];
 
   void _changeStatus() {
     setState(() {
@@ -46,8 +32,40 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _nextProject() {
+    setState(() {
+      final currentIndex = projects.indexOf(currentProject);
+      currentProject = projects[(currentIndex + 1) % projects.length];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    return AppState(
+      workStatus: workStatus,
+      currentProject: currentProject,
+      onChangeStatus: _changeStatus,
+      onNextProject: _nextProject,
+      child: MaterialApp.router(
+        title: 'Рабочее портфолио',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        routerConfig: appRouter,
+      ),
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = AppState.of(context);
+    final String _url = 'https://www.budgetnik.ru/images/news/103986/sovmeshhenie.png';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Главный экран'),
@@ -120,7 +138,7 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        workStatus,
+                        appState.workStatus,
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.black87,
@@ -129,7 +147,7 @@ class _MainScreenState extends State<MainScreen> {
                     ],
                   ),
                   ElevatedButton(
-                    onPressed: _changeStatus,
+                    onPressed: appState.onChangeStatus,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
                       foregroundColor: Colors.white,
@@ -138,6 +156,42 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ),
                     child: const Text('Сменить'),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.pink[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.pink[300]!),
+              ),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Текущий проект:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.pink,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        appState.currentProject,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

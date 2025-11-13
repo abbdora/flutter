@@ -1,34 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../app_state.dart';
 import '../../tasks/screens/tasks_screen.dart';
 
-class ProjectScreen extends StatefulWidget {
+class ProjectScreen extends StatelessWidget {
   const ProjectScreen({super.key});
-
-  @override
-  State<ProjectScreen> createState() => _ProjectScreenState();
-}
-
-class _ProjectScreenState extends State<ProjectScreen> {
-  late String _project;
-  int? _tasksCount;
-
-  @override
-  void initState() {
-    super.initState();
-    _project = "Flutter";
-  }
-
-  void _nextProject() {
-    setState(() {
-      final projects = ["Flutter", "Java", "Python", "Базы данных", "Сети"];
-      final currentIndex = projects.indexOf(_project);
-      _project = projects[(currentIndex + 1) % projects.length];
-      _tasksCount = null;
-    });
-  }
 
   void _navigateToProjectTasks(BuildContext context) {
     Navigator.of(context).push(
@@ -38,6 +15,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = AppState.of(context);
     const String _url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ8nqfnmxH7hXRfEUDHi2JtMDf3_Ox69iS2g&s';
 
     return Scaffold(
@@ -58,8 +36,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(_project,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.pink)),
+                  Text(
+                      appState.currentProject,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.pink)
+                  ),
                   Container(
                     width: 150,
                     height: 55,
@@ -101,52 +81,28 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 ]
             ),
 
-            if (_tasksCount != null) ...[
-              const SizedBox(height: 30),
-              Card(
-                color: Colors.blue[50],
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.task, color: Colors.blue, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Количество задач: $_tasksCount',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
+            const SizedBox(height: 30),
+            const Card(
+              color: Colors.grey,
+              margin: EdgeInsets.symmetric(horizontal: 20),
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Нажмите "Задачи проектов" чтобы добавить задачи',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ] else ...[
-              const SizedBox(height: 30),
-              const Card(
-                color: Colors.grey,
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Нажмите "Задачи проектов" чтобы добавить задачи',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
 
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _nextProject,
+              onPressed: () {
+                appState.onNextProject();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.pink,
                 foregroundColor: Colors.white,
@@ -171,4 +127,3 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
   }
 }
-
