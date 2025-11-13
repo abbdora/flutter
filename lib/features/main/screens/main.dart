@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'app_router.dart';
-import 'service_locator.dart';
+import '../../../app_router.dart';
+import '../../intro/cubit/auth_cubit.dart';
+import '../../../service_locator.dart';
 
 void main() {
   setupLocator();
@@ -14,13 +16,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Рабочее портфолио',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return BlocProvider(
+      create: (context) => AuthCubit(),
+      child: MaterialApp.router(
+        title: 'Рабочее портфолио',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        routerConfig: appRouter,
       ),
-      routerConfig: appRouter,
     );
   }
 }
@@ -47,7 +52,10 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             tooltip: 'Выход',
             icon: const Icon(Icons.logout),
-            onPressed: () => context.pushReplacement('/intro'),
+            onPressed: () {
+              context.read<AuthCubit>().logout();
+              context.pushReplacement('/intro');
+            },
           ),
         ],
       ),
