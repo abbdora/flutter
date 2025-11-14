@@ -7,33 +7,6 @@ import '../../../service_locator.dart';
 import '../../intro/cubit/auth_cubit.dart';
 import '../cubit/main_cubit.dart';
 
-void main() {
-  setupLocator();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => AuthCubit()),
-        BlocProvider(create: (context) => MainCubit()),
-      ],
-      child: MaterialApp.router(
-        title: 'Рабочее портфолио',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        routerConfig: appRouter,
-      ),
-    );
-  }
-}
-
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
