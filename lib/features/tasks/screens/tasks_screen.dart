@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import '../cubit/tasks_cubit.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -11,200 +13,238 @@ class TasksScreen extends StatefulWidget {
 
 class _TasksScreenState extends State<TasksScreen> {
   final TextEditingController _taskController = TextEditingController();
-  final List<Map<String, dynamic>> _tasks = [];
-
   final String _fixedImageUrl = 'https://1gai.ru/uploads/posts/2020-01/1580109107_885544.jpg';
-
-  void _addNewTask() {
-    final taskName = _taskController.text.trim();
-    if (taskName.isNotEmpty) {
-      setState(() {
-        _tasks.add({
-          'name': taskName,
-          'completed': false,
-          'id': DateTime.now().millisecondsSinceEpoch,
-        });
-        _taskController.clear();
-      });
-    }
-  }
-
-  void _toggleTask(int index) {
-    setState(() {
-      _tasks[index]['completed'] = !_tasks[index]['completed'];
-    });
-  }
-
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
-  }
-
-  int _getTasksCount() {
-    return _tasks.length;
-  }
 
   @override
   Widget build(BuildContext context) {
-    final tasksCount = _getTasksCount();
+    return BlocProvider(
+      create: (context) => TasksCubit(),
+      child: Builder(
+        builder: (context) {
+          final tasksCubit = context.read<TasksCubit>();
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Задачи проектов'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Container(
-                width: 350,
-                height: 255,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
-                  child: CachedNetworkImage(
-                    imageUrl: _fixedImageUrl,
-                    fit: BoxFit.contain,
-                    progressIndicatorBuilder: (context, url, progress) =>
-                        Container(
-                          color: Colors.grey[100],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[100],
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error,
-                              color: Colors.red,
-                              size: 24,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Ошибка',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                          ],
-                        ),
+          void _showTaskDetailsDialog(int index, Task task) {
+            final deadlineController = TextEditingController(text: task.deadline);
+            final categoryController = TextEditingController(text: task.category);
+
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(task.name),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: deadlineController,
+                      decoration: const InputDecoration(
+                        labelText: 'Срок выполнения',
+                        border: OutlineInputBorder(),
                       ),
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const Text(
-                  'Количество задач:',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$tasksCount',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _taskController,
-                    decoration: const InputDecoration(
-                      hintText: 'Введите задачу проекта',
-                      border: OutlineInputBorder(),
-                      labelText: 'Новая задача',
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: categoryController,
+                      decoration: const InputDecoration(
+                        labelText: 'Категория',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _addNewTask,
-                  child: const Text('Добавить'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Отмена'),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          Expanded(
-            child: _tasks.isEmpty
-                ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.task, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'Задачи проекта отсутствуют',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  Text(
-                    'Добавьте первую задачу',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ElevatedButton(
+                    onPressed: () {
+                      tasksCubit.updateTaskDetails(
+                        index,
+                        deadlineController.text.trim(),
+                        categoryController.text.trim(),
+                      );
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Сохранить'),
                   ),
                 ],
               ),
-            )
-                : ListView.builder(
-              itemCount: _tasks.length,
-              itemBuilder: (context, index) {
-                final task = _tasks[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: ListTile(
-                    key: ValueKey(task['id']),
-                    leading: Checkbox(
-                      value: task['completed'],
-                      onChanged: (value) {
-                        _toggleTask(index);
-                      },
-                    ),
-                    title: Text(
-                      task['name'],
-                      style: const TextStyle(
-                        fontSize: 16,
+            );
+          }
+
+          void _addNewTask() {
+            final taskName = _taskController.text.trim();
+            if (taskName.isNotEmpty) {
+              tasksCubit.addTask(taskName);
+              _taskController.clear();
+            }
+          }
+
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.blue,
+              title: const Text('Задачи проектов'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            body: BlocBuilder<TasksCubit, TasksState>(
+              builder: (context, state) {
+                final tasksCount = state.tasks.length;
+
+                return Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Container(
+                          width: 350,
+                          height: 255,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(25),
+                            child: CachedNetworkImage(
+                              imageUrl: _fixedImageUrl,
+                              fit: BoxFit.contain,
+                              progressIndicatorBuilder: (context, url, progress) =>
+                                  Container(
+                                    color: Colors.grey[100],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[100],
+                                child: const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                        size: 24,
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        'Ошибка',
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        _deleteTask(index);
-                      },
+
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Количество задач:',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$tasksCount',
+                            style: const TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _taskController,
+                              decoration: const InputDecoration(
+                                hintText: 'Введите задачу проекта',
+                                border: OutlineInputBorder(),
+                                labelText: 'Новая задача',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: _addNewTask,
+                            child: const Text('Добавить'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Expanded(
+                      child: state.tasks.isEmpty
+                          ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.task, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'Задачи проекта отсутствуют',
+                              style: TextStyle(fontSize: 18, color: Colors.grey),
+                            ),
+                            Text(
+                              'Добавьте первую задачу',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      )
+                          : ListView.builder(
+                        itemCount: state.tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = state.tasks[index];
+                          return GestureDetector(
+                            onTap: () => _showTaskDetailsDialog(index, task),
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: ListTile(
+                                title: Text(
+                                  task.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    decoration: task.completed ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (task.deadline.isNotEmpty)
+                                      Text('Срок: ${task.deadline}'),
+                                    if (task.category.isNotEmpty)
+                                      Text('Категория: ${task.category}'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
