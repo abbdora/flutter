@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AuthState {
   final bool isAuthorized;
   final String? login;
-
   const AuthState({this.isAuthorized = false, this.login});
 
   AuthState copyWith({bool? isAuthorized, String? login}) {
