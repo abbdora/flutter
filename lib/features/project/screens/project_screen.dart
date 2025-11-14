@@ -43,9 +43,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => BlocProvider.value(
-        value: projectCubit,
-        child: ProjectEditBottomSheet(project: project),
+      builder: (context) => ProjectEditBottomSheet(
+        project: project,
+        projectCubit: projectCubit,
       ),
     );
   }
@@ -252,8 +252,13 @@ class _ProjectScreenState extends State<ProjectScreen> {
 
 class ProjectEditBottomSheet extends StatefulWidget {
   final Project project;
+  final ProjectCubit projectCubit;
 
-  const ProjectEditBottomSheet({super.key, required this.project});
+  const ProjectEditBottomSheet({
+    super.key,
+    required this.project,
+    required this.projectCubit,
+  });
 
   @override
   State<ProjectEditBottomSheet> createState() => _ProjectEditBottomSheetState();
@@ -276,7 +281,8 @@ class _ProjectEditBottomSheetState extends State<ProjectEditBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final projectCubit = context.read<ProjectCubit>();
+    final state = widget.projectCubit.state;
+    final projectIndex = state.projects.indexOf(widget.project);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -334,7 +340,7 @@ class _ProjectEditBottomSheetState extends State<ProjectEditBottomSheet> {
               });
             },
             onChangeEnd: (value) {
-              projectCubit.updateProjectProgress(widget.project.id, value.round());
+              widget.projectCubit.updateProjectProgress(projectIndex, value.round());
             },
           ),
           Text('Текущий прогресс: $_currentProgress%'),
@@ -354,7 +360,7 @@ class _ProjectEditBottomSheetState extends State<ProjectEditBottomSheet> {
                 setState(() {
                   _currentStatus = newValue;
                 });
-                projectCubit.updateProjectStatus(widget.project.id, newValue);
+                widget.projectCubit.updateProjectStatus(projectIndex, newValue);
               }
             },
             items: <String>['В планах', 'В разработке', 'На паузе', 'Завершен']
@@ -381,7 +387,7 @@ class _ProjectEditBottomSheetState extends State<ProjectEditBottomSheet> {
             ),
             onChanged: (value) {
               final performers = value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-              projectCubit.updateProjectPerformers(widget.project.id, performers);
+              widget.projectCubit.updateProjectPerformers(projectIndex, performers);
             },
           ),
 
@@ -403,7 +409,7 @@ class _ProjectEditBottomSheetState extends State<ProjectEditBottomSheet> {
                 alignLabelWithHint: true,
               ),
               onChanged: (value) {
-                projectCubit.updateProjectDescription(widget.project.id, value);
+                widget.projectCubit.updateProjectDescription(projectIndex, value);
               },
             ),
           ),
