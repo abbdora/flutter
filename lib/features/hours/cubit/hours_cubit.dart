@@ -1,127 +1,41 @@
+// presentation/cubit/hours_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-class HourRecord {
-  final String projectName;
-  final String task;
-  final int hours;
-  final int minutes;
-  final String date;
-
-  const HourRecord({
-    required this.projectName,
-    required this.task,
-    required this.hours,
-    required this.minutes,
-    required this.date,
-  });
-
-  HourRecord copyWith({
-    String? projectName,
-    String? task,
-    int? hours,
-    int? minutes,
-    String? date,
-  }) {
-    return HourRecord(
-      projectName: projectName ?? this.projectName,
-      task: task ?? this.task,
-      hours: hours ?? this.hours,
-      minutes: minutes ?? this.minutes,
-      date: date ?? this.date,
-    );
-  }
-}
+import '../../../core/models/hour_record_model.dart';
+import '../../../domain/usecases/delete_hour_record_usecase.dart';
+import '../../../domain/usecases/get_hour_records_usecase.dart';
+import '../../../domain/usecases/save_hour_record_usecase.dart';
 
 class HoursState {
-  final List<HourRecord> hours;
+  final List<HourRecordModel> hourRecords;
+  final bool isLoading;
+  final String? error;
 
-  const HoursState({required this.hours});
+  const HoursState({
+    required this.hourRecords,
+    this.isLoading = false,
+    this.error,
+  });
 
-  HoursState copyWith({List<HourRecord>? hours}) {
-    return HoursState(hours: hours ?? this.hours);
-  }
-}
+  factory HoursState.initial() => const HoursState(
+    hourRecords: [],
+    isLoading: false,
+    error: null,
+  );
 
-class HoursCubit extends Cubit<HoursState> {
-  HoursCubit() : super(const HoursState(hours: [
-    HourRecord(
-      projectName: 'Мобильное приложение',
-      task: 'Разработка интерфейса',
-      hours: 3,
-      minutes: 30,
-      date: '15.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Веб-сайт',
-      task: 'Интеграция API',
-      hours: 2,
-      minutes: 0,
-      date: '14.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Документация',
-      task: 'Написание руководства',
-      hours: 1,
-      minutes: 45,
-      date: '13.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Тестирование',
-      task: 'Функциональное тестирование',
-      hours: 4,
-      minutes: 15,
-      date: '12.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Дизайн',
-      task: 'Создание макетов',
-      hours: 2,
-      minutes: 30,
-      date: '11.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Совещание',
-      task: 'Планирование спринта',
-      hours: 1,
-      minutes: 0,
-      date: '10.01.2024',
-    ),
-    HourRecord(
-      projectName: 'База данных',
-      task: 'Оптимизация запросов',
-      hours: 3,
-      minutes: 0,
-      date: '09.01.2024',
-    ),
-    HourRecord(
-      projectName: 'Code Review',
-      task: 'Проверка кода команды',
-      hours: 2,
-      minutes: 20,
-      date: '08.01.2024',
-    ),
-  ]));
-
-  void addHourRecord(String projectName, String task, int hours, int minutes, String date) {
-    final newRecord = HourRecord(
-      projectName: projectName,
-      task: task,
-      hours: hours,
-      minutes: minutes,
-      date: date,
+  HoursState copyWith({
+    List<HourRecordModel>? hourRecords,
+    bool? isLoading,
+    String? error,
+  }) {
+    return HoursState(
+      hourRecords: hourRecords ?? this.hourRecords,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
     );
-    final updatedHours = [...state.hours, newRecord];
-    emit(state.copyWith(hours: updatedHours));
-  }
-
-  void deleteHourRecord(int index) {
-    final updatedHours = List<HourRecord>.from(state.hours);
-    updatedHours.removeAt(index);
-    emit(state.copyWith(hours: updatedHours));
   }
 
   int get totalMinutes {
-    return state.hours.fold(0, (sum, record) => sum + record.hours * 60 + record.minutes);
+    return hourRecords.fold(0, (sum, record) => sum + record.hours * 60 + record.minutes);
   }
 
   String formatTotalTime() {
@@ -131,5 +45,79 @@ class HoursCubit extends Cubit<HoursState> {
     if (h == 0) return '${m}м';
     if (m == 0) return '${h}ч';
     return '${h}ч ${m}м';
+  }
+}
+
+class HoursCubit extends Cubit<HoursState> {
+  final GetHourRecordsUseCase _getHourRecordsUseCase;
+  final SaveHourRecordUseCase _saveHourRecordUseCase;
+  final DeleteHourRecordUseCase _deleteHourRecordUseCase;
+
+  HoursCubit({
+    required GetHourRecordsUseCase getHourRecordsUseCase,
+    required SaveHourRecordUseCase saveHourRecordUseCase,
+    required DeleteHourRecordUseCase deleteHourRecordUseCase,
+  }) : _getHourRecordsUseCase = getHourRecordsUseCase,
+        _saveHourRecordUseCase = saveHourRecordUseCase,
+        _deleteHourRecordUseCase = deleteHourRecordUseCase,
+        super(HoursState.initial()) {
+    loadHourRecords(); // Теперь публичный метод
+  }
+
+  // Изменяем на публичный метод
+  Future<void> loadHourRecords() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final hourRecords = await _getHourRecordsUseCase();
+      emit(state.copyWith(
+        hourRecords: hourRecords,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка загрузки: $e',
+      ));
+    }
+  }
+
+  Future<void> saveHourRecord(HourRecordModel hourRecord) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _saveHourRecordUseCase(hourRecord);
+      await loadHourRecords(); // Используем публичный метод
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка сохранения: $e',
+      ));
+    }
+  }
+
+  Future<void> deleteHourRecord(String id) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _deleteHourRecordUseCase(id);
+      final updatedList = state.hourRecords
+          .where((hr) => hr.id != id)
+          .toList();
+      emit(state.copyWith(
+        hourRecords: updatedList,
+        isLoading: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка удаления: $e',
+      ));
+    }
+  }
+
+  void updateHourRecordInList(HourRecordModel updated) {
+    final updatedList = state.hourRecords
+        .map((hr) => hr.id == updated.id ? updated : hr)
+        .toList();
+    emit(state.copyWith(hourRecords: updatedList));
   }
 }

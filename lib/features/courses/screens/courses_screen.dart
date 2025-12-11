@@ -1,9 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/models/course_model.dart';
+import '../../../domain/repositories/courses_repository.dart';
+import '../../../domain/usecases/delete_course_usecase.dart';
+import '../../../domain/usecases/get_courses_usecase.dart';
+import '../../../domain/usecases/save_course_usecase.dart';
 import '../cubit/courses_cubit.dart';
 
-class CoursesScreen extends StatelessWidget {
+class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
+
+  @override
+  State<CoursesScreen> createState() => _CoursesScreenState();
+}
+
+class _CoursesScreenState extends State<CoursesScreen> {
+  late final GetCoursesUseCase _getCoursesUseCase;
+  late final SaveCourseUseCase _saveCourseUseCase;
+  late final DeleteCourseUseCase _deleteCourseUseCase;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCoursesUseCase = GetCoursesUseCase(context.read<CoursesRepository>());
+    _saveCourseUseCase = SaveCourseUseCase(context.read<CoursesRepository>());
+    _deleteCourseUseCase = DeleteCourseUseCase(context.read<CoursesRepository>());
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    final courses = await _getCoursesUseCase();
+    if (mounted) {
+      context.read<CoursesCubit>().setCourses(courses);
+    }
+  }
+
+  Future<void> _saveCourse(CourseModel course) async {
+    await _saveCourseUseCase(course);
+    await _loadCourses();
+  }
+
+  Future<void> _deleteCourse(String id) async {
+    await _deleteCourseUseCase(id);
+    if (mounted) {
+      context.read<CoursesCubit>().deleteCourse(id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +90,7 @@ class CoursesScreen extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => context.read<CoursesCubit>().deleteCourse(course.id),
+                      onPressed: () => _deleteCourse(course.id),
                     ),
                   ],
                 ),
@@ -64,7 +106,7 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  void _showAddDialog(BuildContext screenContext) {
+  void _showAddDialog(BuildContext context) {
     final titleCtrl = TextEditingController();
     final platformCtrl = TextEditingController();
     final dateCtrl = TextEditingController();
@@ -72,7 +114,7 @@ class CoursesScreen extends StatelessWidget {
     bool hasCert = false;
 
     showDialog(
-      context: screenContext,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Новый курс'),
         content: SizedBox(
@@ -83,8 +125,9 @@ class CoursesScreen extends StatelessWidget {
               TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Название')),
               TextField(controller: platformCtrl, decoration: const InputDecoration(labelText: 'Платформа')),
               TextField(controller: dateCtrl, decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)')),
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 value: status,
+                decoration: const InputDecoration(labelText: 'Статус'),
                 items: ['Пройден', 'В процессе']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -99,20 +142,19 @@ class CoursesScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Отмена')),
           TextButton(
-            onPressed: () {
-              screenContext.read<CoursesCubit>().addCourse(
-                Course(
-                  id: DateTime.now().microsecondsSinceEpoch.toString(),
-                  title: titleCtrl.text.trim(),
-                  platform: platformCtrl.text.trim(),
-                  dateCompleted: dateCtrl.text.trim(),
-                  status: status,
-                  hasCertificate: hasCert,
-                ),
+            onPressed: () async {
+              final newCourse = CourseModel(
+                id: DateTime.now().microsecondsSinceEpoch.toString(),
+                title: titleCtrl.text.trim(),
+                platform: platformCtrl.text.trim(),
+                dateCompleted: dateCtrl.text.trim(),
+                status: status,
+                hasCertificate: hasCert,
               );
-              Navigator.of(dialogContext).pop();
+              await _saveCourse(newCourse);
+              Navigator.pop(dialogContext);
             },
             child: const Text('Добавить'),
           ),
@@ -121,7 +163,7 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext screenContext, Course course) {
+  void _showEditDialog(BuildContext context, CourseModel course) {
     final titleCtrl = TextEditingController(text: course.title);
     final platformCtrl = TextEditingController(text: course.platform);
     final dateCtrl = TextEditingController(text: course.dateCompleted);
@@ -129,7 +171,7 @@ class CoursesScreen extends StatelessWidget {
     bool hasCert = course.hasCertificate;
 
     showDialog(
-      context: screenContext,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Редактировать курс'),
         content: SizedBox(
@@ -140,8 +182,9 @@ class CoursesScreen extends StatelessWidget {
               TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Название')),
               TextField(controller: platformCtrl, decoration: const InputDecoration(labelText: 'Платформа')),
               TextField(controller: dateCtrl, decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)')),
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 value: status,
+                decoration: const InputDecoration(labelText: 'Статус'),
                 items: ['Пройден', 'В процессе']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -156,9 +199,9 @@ class CoursesScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Отмена')),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               final updated = course.copyWith(
                 title: titleCtrl.text.trim(),
                 platform: platformCtrl.text.trim(),
@@ -166,8 +209,8 @@ class CoursesScreen extends StatelessWidget {
                 status: status,
                 hasCertificate: hasCert,
               );
-              screenContext.read<CoursesCubit>().updateCourse(course.id, updated);
-              Navigator.of(dialogContext).pop();
+              await _saveCourse(updated);
+              Navigator.pop(dialogContext);
             },
             child: const Text('Сохранить'),
           ),

@@ -1,61 +1,50 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-class Course {
-  final String id;
-  final String title;
-  final String platform;
-  final String dateCompleted;
-  final String status;
-  final bool hasCertificate;
-
-  Course({
-    required this.id,
-    required this.title,
-    required this.platform,
-    required this.dateCompleted,
-    required this.status,
-    this.hasCertificate = false,
-  });
-
-  Course copyWith({
-    String? id,
-    String? title,
-    String? platform,
-    String? dateCompleted,
-    String? status,
-    bool? hasCertificate,
-  }) {
-    return Course(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      platform: platform ?? this.platform,
-      dateCompleted: dateCompleted ?? this.dateCompleted,
-      status: status ?? this.status,
-      hasCertificate: hasCertificate ?? this.hasCertificate,
-    );
-  }
-}
+import '../../../core/models/course_model.dart';
 
 class CoursesState {
-  final List<Course> courses;
-  const CoursesState(this.courses);
-  factory CoursesState.initial() => const CoursesState([]);
+  final List<CourseModel> courses;
+  final bool isLoading;
+
+  const CoursesState({
+    required this.courses,
+    this.isLoading = false,
+  });
+
+  factory CoursesState.initial() => const CoursesState(courses: []);
+
+  CoursesState copyWith({
+    List<CourseModel>? courses,
+    bool? isLoading,
+  }) {
+    return CoursesState(
+      courses: courses ?? this.courses,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
 }
 
 class CoursesCubit extends Cubit<CoursesState> {
   CoursesCubit() : super(CoursesState.initial());
 
-  void addCourse(Course course) {
-    emit(CoursesState([...state.courses, course]));
+  void setCourses(List<CourseModel> courses) {
+    emit(state.copyWith(courses: courses));
   }
 
-  void updateCourse(String id, Course updatedCourse) {
-    final updated = state.courses.map((c) => c.id == id ? updatedCourse : c).toList();
-    emit(CoursesState(updated));
+  void updateCourse(CourseModel updated) {
+    final updatedList = state.courses
+        .map((c) => c.id == updated.id ? updated : c)
+        .toList();
+    emit(state.copyWith(courses: updatedList));
   }
 
   void deleteCourse(String id) {
-    final updated = state.courses.where((c) => c.id != id).toList();
-    emit(CoursesState(updated));
+    final updatedList = state.courses
+        .where((c) => c.id != id)
+        .toList();
+    emit(state.copyWith(courses: updatedList));
+  }
+
+  void setLoading(bool loading) {
+    emit(state.copyWith(isLoading: loading));
   }
 }

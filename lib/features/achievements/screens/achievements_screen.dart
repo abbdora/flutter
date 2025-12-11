@@ -1,9 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/models/achievement_model.dart';
+import '../../../domain/repositories/achievements_repository.dart';
+import '../../../domain/usecases/delete_achievement_usecase.dart';
+import '../../../domain/usecases/get_achievements_usecase.dart';
+import '../../../domain/usecases/save_achievement_usecase.dart';
 import '../cubit/achievements_cubit.dart';
 
-class AchievementsScreen extends StatelessWidget {
+
+class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
+
+  @override
+  State<AchievementsScreen> createState() => _AchievementsScreenState();
+}
+
+class _AchievementsScreenState extends State<AchievementsScreen> {
+  late final GetAchievementsUseCase _getAchievementsUseCase;
+  late final SaveAchievementUseCase _saveAchievementUseCase;
+  late final DeleteAchievementUseCase _deleteAchievementUseCase;
+
+  @override
+  void initState() {
+    super.initState();
+    _getAchievementsUseCase = GetAchievementsUseCase(
+      context.read<AchievementsRepository>(),
+    );
+    _saveAchievementUseCase = SaveAchievementUseCase(
+      context.read<AchievementsRepository>(),
+    );
+    _deleteAchievementUseCase = DeleteAchievementUseCase(
+      context.read<AchievementsRepository>(),
+    );
+
+    _loadAchievements();
+  }
+
+  Future<void> _loadAchievements() async {
+    final achievements = await _getAchievementsUseCase();
+    if (mounted) {
+      context.read<AchievementsCubit>().setAchievements(achievements);
+    }
+  }
+
+  Future<void> _saveAchievement(AchievementModel achievement) async {
+    await _saveAchievementUseCase(achievement);
+    await _loadAchievements();
+  }
+
+  Future<void> _deleteAchievement(String id) async {
+    await _deleteAchievementUseCase(id);
+    if (mounted) {
+      context.read<AchievementsCubit>().deleteAchievement(id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +123,7 @@ class AchievementsScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildAchievementTile(BuildContext context, Achievement a) {
+  Widget _buildAchievementTile(BuildContext context, AchievementModel a) {
     return ListTile(
       leading: a.imageUrl != null
           ? ClipRRect(
@@ -98,14 +148,14 @@ class AchievementsScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => context.read<AchievementsCubit>().deleteAchievement(a.id),
+            onPressed: () => _deleteAchievement(a.id),
           ),
         ],
       ),
     );
   }
 
-  void _showAddDialog(BuildContext screenContext) {
+  void _showAddDialog(BuildContext context) {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final dateCtrl = TextEditingController();
@@ -113,7 +163,7 @@ class AchievementsScreen extends StatelessWidget {
     final imageCtrl = TextEditingController();
 
     showDialog(
-      context: screenContext,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Новое достижение'),
         content: SizedBox(
@@ -122,9 +172,18 @@ class AchievementsScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Название *')),
-                TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Описание')),
-                TextField(controller: dateCtrl, decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)')),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(labelText: 'Название *'),
+                ),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(labelText: 'Описание'),
+                ),
+                TextField(
+                  controller: dateCtrl,
+                  decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)'),
+                ),
                 DropdownButtonFormField<String>(
                   value: category,
                   decoration: const InputDecoration(labelText: 'Категория'),
@@ -133,16 +192,22 @@ class AchievementsScreen extends StatelessWidget {
                       .toList(),
                   onChanged: (v) => category = v!,
                 ),
-                TextField(controller: imageCtrl, decoration: const InputDecoration(labelText: 'URL изображения')),
+                TextField(
+                  controller: imageCtrl,
+                  decoration: const InputDecoration(labelText: 'URL изображения'),
+                ),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Отмена')),
           TextButton(
-            onPressed: () {
-              final newAch = Achievement(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newAchievement = AchievementModel(
                 id: DateTime.now().microsecondsSinceEpoch.toString(),
                 title: titleCtrl.text.trim(),
                 description: descCtrl.text.trim(),
@@ -150,7 +215,8 @@ class AchievementsScreen extends StatelessWidget {
                 category: category,
                 imageUrl: imageCtrl.text.trim().isNotEmpty ? imageCtrl.text.trim() : null,
               );
-              screenContext.read<AchievementsCubit>().addAchievement(newAch);
+
+              await _saveAchievement(newAchievement);
               Navigator.pop(dialogContext);
             },
             child: const Text('Добавить'),
@@ -160,7 +226,7 @@ class AchievementsScreen extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext screenContext, Achievement a) {
+  void _showEditDialog(BuildContext context, AchievementModel a) {
     final titleCtrl = TextEditingController(text: a.title);
     final descCtrl = TextEditingController(text: a.description);
     final dateCtrl = TextEditingController(text: a.date);
@@ -168,7 +234,7 @@ class AchievementsScreen extends StatelessWidget {
     final imageCtrl = TextEditingController(text: a.imageUrl ?? '');
 
     showDialog(
-      context: screenContext,
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Редактировать достижение'),
         content: SizedBox(
@@ -177,9 +243,18 @@ class AchievementsScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Название *')),
-                TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Описание')),
-                TextField(controller: dateCtrl, decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)')),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(labelText: 'Название *'),
+                ),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(labelText: 'Описание'),
+                ),
+                TextField(
+                  controller: dateCtrl,
+                  decoration: const InputDecoration(labelText: 'Дата (дд.мм.гггг)'),
+                ),
                 DropdownButtonFormField<String>(
                   value: category,
                   decoration: const InputDecoration(labelText: 'Категория'),
@@ -188,23 +263,30 @@ class AchievementsScreen extends StatelessWidget {
                       .toList(),
                   onChanged: (v) => category = v!,
                 ),
-                TextField(controller: imageCtrl, decoration: const InputDecoration(labelText: 'URL изображения (опционально)')),
+                TextField(
+                  controller: imageCtrl,
+                  decoration: const InputDecoration(labelText: 'URL изображения (опционально)'),
+                ),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Отмена')),
           TextButton(
-            onPressed: () {
-              final updated = a.copyWith(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final updatedAchievement = a.copyWith(
                 title: titleCtrl.text.trim(),
                 description: descCtrl.text.trim(),
                 date: dateCtrl.text.trim(),
                 category: category,
                 imageUrl: imageCtrl.text.trim().isNotEmpty ? imageCtrl.text.trim() : null,
               );
-              screenContext.read<AchievementsCubit>().updateAchievement(a.id, updated);
+
+              await _saveAchievement(updatedAchievement);
               Navigator.pop(dialogContext);
             },
             child: const Text('Сохранить'),

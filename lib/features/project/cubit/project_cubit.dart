@@ -1,138 +1,111 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-class Project {
-  final String name;
-  final String description;
-  final String imageUrl;
-  final String status;
-  final int progress;
-  final List<String> performers;
-  final String detailedDescription;
-
-  Project({
-    required this.name,
-    required this.description,
-    required this.imageUrl,
-    required this.status,
-    required this.progress,
-    required this.performers,
-    required this.detailedDescription,
-  });
-
-  Project copyWith({
-    String? name,
-    String? description,
-    String? status,
-    int? progress,
-    List<String>? performers,
-    String? detailedDescription,
-  }) {
-    return Project(
-      name: name ?? this.name,
-      description: description ?? this.description,
-      imageUrl: this.imageUrl,
-      status: status ?? this.status,
-      progress: progress ?? this.progress,
-      performers: performers ?? this.performers,
-      detailedDescription: detailedDescription ?? this.detailedDescription,
-    );
-  }
-}
+import '../../../../core/models/project_model.dart';
+import '../../../../domain/usecases/get_projects_usecase.dart';
+import '../../../../domain/usecases/update_project_usecase.dart';
 
 class ProjectState {
-  final List<Project> projects;
-  final Project? selectedProject;
+  final List<ProjectModel> projects;
+  final ProjectModel? selectedProject;
+  final bool isLoading;
+  final String? error;
 
   const ProjectState({
     required this.projects,
     this.selectedProject,
+    this.isLoading = false,
+    this.error,
   });
 
+  factory ProjectState.initial() => const ProjectState(
+    projects: [],
+    isLoading: false,
+    error: null,
+  );
+
   ProjectState copyWith({
-    List<Project>? projects,
-    Project? selectedProject,
+    List<ProjectModel>? projects,
+    ProjectModel? selectedProject,
+    bool? isLoading,
+    String? error,
   }) {
     return ProjectState(
       projects: projects ?? this.projects,
       selectedProject: selectedProject ?? this.selectedProject,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
     );
   }
 }
 
 class ProjectCubit extends Cubit<ProjectState> {
-  ProjectCubit()
-      : super(
-    ProjectState(
-      projects: [
-        Project(
-          name: 'Мобильное приложение "Рабочее портфолио"',
-          description: 'Разработка Flutter приложения для учета рабочих проектов',
-          imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJ8nqfnmxH7hXRfEUDHi2JtMDf3_Ox69iS2g&s',
-          status: '',
-          progress: 0,
-          performers: [],
-          detailedDescription: '',
-        ),
-        Project(
-          name: 'Корпоративный портал',
-          description: 'Веб-приложение для внутреннего использования компании',
-          imageUrl: 'https://habrastorage.org/files/813/b47/91f/813b4791fb274fa98ab8bdb7eec03acb.png',
-          status: 'Завершен',
-          progress: 100,
-          performers: [''],
-          detailedDescription: 'Корпоративный портал с системой документооборота и коммуникации сотрудников.',
-        ),
-        Project(
-          name: 'E-commerce платформа',
-          description: 'Интернет-магазин с системой управления заказами',
-          imageUrl: 'https://eurobyte.ru/img/articles/plyusy-i-minusy-internet-magazina/image1.png',
-          status: 'В планах',
-          progress: 0,
-          performers: [''],
-          detailedDescription: 'Многофункциональная платформа для онлайн-торговли с интеграцией платежных систем.',
-        ),
-        Project(
-          name: 'Система аналитики',
-          description: '',
-          imageUrl: 'https://cdn-icons-png.flaticon.com/512/2721/2721264.png',
-          status: 'На паузе',
-          progress: 30,
-          performers: [''],
-          detailedDescription: 'Система визуализации и анализа ключевых бизнес-метрик в реальном времени.',
-        ),
-      ],
-    ),
-  );
+  final GetProjectsUseCase _getProjectsUseCase;
+  final UpdateProjectUseCase _updateProjectUseCase;
 
-  void updateProjectProgress(int projectIndex, int newProgress) {
-    final updatedProjects = List<Project>.from(state.projects);
-    String newStatus = _getStatusByProgress(newProgress);
-    updatedProjects[projectIndex] = updatedProjects[projectIndex].copyWith(
-        progress: newProgress,
-        status: newStatus
+  ProjectCubit({
+    required GetProjectsUseCase getProjectsUseCase,
+    required UpdateProjectUseCase updateProjectUseCase,
+  }) : _getProjectsUseCase = getProjectsUseCase,
+        _updateProjectUseCase = updateProjectUseCase,
+        super(ProjectState.initial()) {
+    loadProjects();
+  }
+
+  Future<void> loadProjects() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final projects = await _getProjectsUseCase();
+      emit(state.copyWith(
+        projects: projects,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка загрузки проектов: $e',
+      ));
+    }
+  }
+
+  Future<void> updateProject(ProjectModel project) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _updateProjectUseCase(project);
+      final updatedProjects = state.projects
+          .map((p) => p.id == project.id ? project : p)
+          .toList();
+      emit(state.copyWith(
+        projects: updatedProjects,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка обновления проекта: $e',
+      ));
+    }
+  }
+
+  // Добавить этот метод для обновления всех полей сразу
+  Future<void> updateProjectWithAllFields({
+    required ProjectModel project,
+    required int progress,
+    required String status,
+    required List<String> performers,
+    required String detailedDescription,
+  }) async {
+    final newStatus = ProjectModel.getStatusByProgress(progress);
+    final updatedProject = project.copyWith(
+      progress: progress,
+      status: status,
+      performers: performers,
+      detailedDescription: detailedDescription,
     );
-    emit(state.copyWith(projects: updatedProjects));
+    await updateProject(updatedProject);
   }
 
-  void updateProjectStatus(int projectIndex, String newStatus) {
-    final updatedProjects = List<Project>.from(state.projects);
-    updatedProjects[projectIndex] = updatedProjects[projectIndex].copyWith(status: newStatus);
-    emit(state.copyWith(projects: updatedProjects));
-  }
-
-  void updateProjectPerformers(int projectIndex, List<String> newPerformers) {
-    final updatedProjects = List<Project>.from(state.projects);
-    updatedProjects[projectIndex] = updatedProjects[projectIndex].copyWith(performers: newPerformers);
-    emit(state.copyWith(projects: updatedProjects));
-  }
-
-  void updateProjectDescription(int projectIndex, String newDescription) {
-    final updatedProjects = List<Project>.from(state.projects);
-    updatedProjects[projectIndex] = updatedProjects[projectIndex].copyWith(detailedDescription: newDescription);
-    emit(state.copyWith(projects: updatedProjects));
-  }
-
-  void selectProject(Project project) {
+  void selectProject(ProjectModel project) {
     emit(state.copyWith(selectedProject: project));
   }
 
@@ -140,9 +113,27 @@ class ProjectCubit extends Cubit<ProjectState> {
     emit(state.copyWith(selectedProject: null));
   }
 
-  String _getStatusByProgress(int progress) {
-    if (progress == 0) return 'В планах';
-    if (progress < 100) return 'В разработке';
-    return 'Завершен';
+  void updateProjectProgress(ProjectModel project, int newProgress) {
+    final newStatus = ProjectModel.getStatusByProgress(newProgress);
+    final updatedProject = project.copyWith(
+      progress: newProgress,
+      status: newStatus,
+    );
+    updateProject(updatedProject);
+  }
+
+  void updateProjectStatus(ProjectModel project, String newStatus) {
+    final updatedProject = project.copyWith(status: newStatus);
+    updateProject(updatedProject);
+  }
+
+  void updateProjectPerformers(ProjectModel project, List<String> newPerformers) {
+    final updatedProject = project.copyWith(performers: newPerformers);
+    updateProject(updatedProject);
+  }
+
+  void updateProjectDescription(ProjectModel project, String newDescription) {
+    final updatedProject = project.copyWith(detailedDescription: newDescription);
+    updateProject(updatedProject);
   }
 }

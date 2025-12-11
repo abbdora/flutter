@@ -1,65 +1,107 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/models/profile_model.dart';
+import '../../../../domain/usecases/get_profile_usecase.dart';
+import '../../../../domain/usecases/save_profile_usecase.dart';
 
 class ProfileState {
-  final String fullName;
-  final String position;
-  final String company;
-  final String workDay;
-  final String specialization;
+  final ProfileModel profile;
+  final bool isLoading;
+  final String? error;
 
   const ProfileState({
-    required this.fullName,
-    required this.position,
-    required this.company,
-    required this.workDay,
-    required this.specialization,
+    required this.profile,
+    this.isLoading = false,
+    this.error,
   });
 
+  factory ProfileState.initial() => ProfileState(
+    profile: ProfileModel.initial(),
+    isLoading: false,
+    error: null,
+  );
+
   ProfileState copyWith({
-    String? fullName,
-    String? position,
-    String? company,
-    String? workDay,
-    String? specialization,
+    ProfileModel? profile,
+    bool? isLoading,
+    String? error,
   }) {
     return ProfileState(
-      fullName: fullName ?? this.fullName,
-      position: position ?? this.position,
-      company: company ?? this.company,
-      workDay: workDay ?? this.workDay,
-      specialization: specialization ?? this.specialization,
+      profile: profile ?? this.profile,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
     );
   }
-
-  static const initial = ProfileState(
-    fullName: 'не указано',
-    position: 'не указано',
-    company: 'не указано',
-    workDay: 'не указано',
-    specialization: 'не указано',
-  );
 }
 
 class ProfileCubit extends Cubit<ProfileState> {
-  ProfileCubit() : super(ProfileState.initial);
+  final GetProfileUseCase _getProfileUseCase;
+  final SaveProfileUseCase _saveProfileUseCase;
+
+  ProfileCubit({
+    required GetProfileUseCase getProfileUseCase,
+    required SaveProfileUseCase saveProfileUseCase,
+  }) : _getProfileUseCase = getProfileUseCase,
+        _saveProfileUseCase = saveProfileUseCase,
+        super(ProfileState.initial()) {
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final profile = await _getProfileUseCase();
+      emit(state.copyWith(
+        profile: profile,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка загрузки профиля: $e',
+      ));
+    }
+  }
+
+  Future<void> saveProfile(ProfileModel profile) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _saveProfileUseCase(profile);
+      emit(state.copyWith(
+        profile: profile,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка сохранения профиля: $e',
+      ));
+    }
+  }
 
   void updateFullName(String newFullName) {
-    emit(state.copyWith(fullName: newFullName));
+    final updatedProfile = state.profile.copyWith(fullName: newFullName);
+    emit(state.copyWith(profile: updatedProfile));
   }
 
   void updatePosition(String newPosition) {
-    emit(state.copyWith(position: newPosition));
+    final updatedProfile = state.profile.copyWith(position: newPosition);
+    emit(state.copyWith(profile: updatedProfile));
   }
 
   void updateCompany(String newCompany) {
-    emit(state.copyWith(company: newCompany));
+    final updatedProfile = state.profile.copyWith(company: newCompany);
+    emit(state.copyWith(profile: updatedProfile));
   }
 
   void updateWorkDay(String newWorkDay) {
-    emit(state.copyWith(workDay: newWorkDay));
+    final updatedProfile = state.profile.copyWith(workDay: newWorkDay);
+    emit(state.copyWith(profile: updatedProfile));
   }
 
   void updateSpecialization(String newSpecialization) {
-    emit(state.copyWith(specialization: newSpecialization));
+    final updatedProfile = state.profile.copyWith(specialization: newSpecialization);
+    emit(state.copyWith(profile: updatedProfile));
   }
 }

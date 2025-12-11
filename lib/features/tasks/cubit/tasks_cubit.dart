@@ -1,85 +1,174 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/models/task_model.dart';
+import '../../../../domain/usecases/get_tasks_usecase.dart';
+import '../../../../domain/usecases/save_task_usecase.dart';
+import '../../../../domain/usecases/update_task_usecase.dart';
+import '../../../../domain/usecases/delete_task_usecase.dart';
 
-class Task {
-  final String name;
-  final bool completed;
-  final String deadline;
-  final String category;
+class TasksState {
+  final List<TaskModel> tasks;
+  final bool isLoading;
+  final String? error;
 
-  const Task({
-    required this.name,
-    required this.completed,
-    required this.deadline,
-    required this.category,
+  const TasksState({
+    required this.tasks,
+    this.isLoading = false,
+    this.error,
   });
 
-  Task copyWith({
-    String? name,
-    bool? completed,
-    String? deadline,
-    String? category,
+  factory TasksState.initial() => const TasksState(
+    tasks: [],
+    isLoading: false,
+    error: null,
+  );
+
+  TasksState copyWith({
+    List<TaskModel>? tasks,
+    bool? isLoading,
+    String? error,
   }) {
-    return Task(
-      name: name ?? this.name,
-      completed: completed ?? this.completed,
-      deadline: deadline ?? this.deadline,
-      category: category ?? this.category,
+    return TasksState(
+      tasks: tasks ?? this.tasks,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
     );
   }
 }
 
-class TasksState {
-  final List<Task> tasks;
-
-  const TasksState({required this.tasks});
-
-  TasksState copyWith({List<Task>? tasks}) {
-    return TasksState(tasks: tasks ?? this.tasks);
-  }
-}
-
 class TasksCubit extends Cubit<TasksState> {
-  TasksCubit() : super(const TasksState(tasks: [
-    Task(
-      name: 'Разработать архитектуру приложения',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-    Task(
-      name: 'Создать интерфейс пользователя',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-    Task(
-      name: 'Протестировать функционал',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-  ]));
+  final GetTasksUseCase _getTasksUseCase;
+  final SaveTaskUseCase _saveTaskUseCase;
+  final UpdateTaskUseCase _updateTaskUseCase;
+  final DeleteTaskUseCase _deleteTaskUseCase;
 
-  void addTask(String name) {
-    if (name.trim().isNotEmpty) {
-      final newTask = Task(
+  TasksCubit({
+    required GetTasksUseCase getTasksUseCase,
+    required SaveTaskUseCase saveTaskUseCase,
+    required UpdateTaskUseCase updateTaskUseCase,
+    required DeleteTaskUseCase deleteTaskUseCase,
+  }) : _getTasksUseCase = getTasksUseCase,
+        _saveTaskUseCase = saveTaskUseCase,
+        _updateTaskUseCase = updateTaskUseCase,
+        _deleteTaskUseCase = deleteTaskUseCase,
+        super(TasksState.initial()) {
+    loadTasks();
+  }
+
+  Future<void> loadTasks() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final tasks = await _getTasksUseCase();
+      emit(state.copyWith(
+        tasks: tasks,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка загрузки задач: $e',
+      ));
+    }
+  }
+
+  Future<void> addTask(String name) async {
+    if (name.trim().isEmpty) return;
+
+    emit(state.copyWith(isLoading: true));
+    try {
+      final newTask = TaskModel(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
         name: name.trim(),
         completed: false,
         deadline: '',
         category: '',
       );
-      final updatedTasks = [...state.tasks, newTask];
-      emit(state.copyWith(tasks: updatedTasks));
+
+      await _saveTaskUseCase(newTask);
+      await loadTasks(); // Перезагружаем список
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка добавления задачи: $e',
+      ));
     }
   }
 
-  void updateTaskDetails(int index, String deadline, String category) {
-    final updatedTasks = List<Task>.from(state.tasks);
-    updatedTasks[index] = updatedTasks[index].copyWith(
-      deadline: deadline,
-      category: category,
-    );
-    emit(state.copyWith(tasks: updatedTasks));
+  Future<void> updateTaskDetails({
+    required String taskId,
+    required String deadline,
+    required String category,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final task = state.tasks.firstWhere((t) => t.id == taskId);
+      final updatedTask = task.copyWith(
+        deadline: deadline,
+        category: category,
+      );
+
+      await _updateTaskUseCase(updatedTask);
+      final updatedTasks = state.tasks
+          .map((t) => t.id == taskId ? updatedTask : t)
+          .toList();
+
+      emit(state.copyWith(
+        tasks: updatedTasks,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка обновления задачи: $e',
+      ));
+    }
   }
 
+  Future<void> toggleTaskCompletion(String taskId) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final task = state.tasks.firstWhere((t) => t.id == taskId);
+      final updatedTask = task.copyWith(
+        completed: !task.completed,
+      );
+
+      await _updateTaskUseCase(updatedTask);
+      final updatedTasks = state.tasks
+          .map((t) => t.id == taskId ? updatedTask : t)
+          .toList();
+
+      emit(state.copyWith(
+        tasks: updatedTasks,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка обновления задачи: $e',
+      ));
+    }
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _deleteTaskUseCase(taskId);
+      final updatedTasks = state.tasks
+          .where((t) => t.id != taskId)
+          .toList();
+
+      emit(state.copyWith(
+        tasks: updatedTasks,
+        isLoading: false,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: 'Ошибка удаления задачи: $e',
+      ));
+    }
+  }
 }
