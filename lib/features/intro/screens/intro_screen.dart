@@ -72,7 +72,6 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Поле для логина
                 Container(
                   width: 300,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,7 +97,6 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Поле для пароля
                 Container(
                   width: 300,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -141,7 +139,6 @@ class _IntroScreenState extends State<IntroScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Кнопка входа
                 ElevatedButton.icon(
                   onPressed: _handleLogin,
                   icon: const Icon(Icons.login),
@@ -160,25 +157,6 @@ class _IntroScreenState extends State<IntroScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-
-                // Кнопка перехода к главному экрану (как было)
-                ElevatedButton.icon(
-                  onPressed: _goToMainScreen,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text(
-                    'Перейти к главному экрану',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple.shade300,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
