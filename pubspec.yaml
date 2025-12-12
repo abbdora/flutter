@@ -14,6 +14,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   get_it: ^8.0.0
   flutter_bloc: ^8.1.1
+  sqflite: ^2.3.0
+  path: ^1.8.0
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  sqflite_common_ffi: ^2.3.0
 
 dev_dependencies:
   flutter_test:

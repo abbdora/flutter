@@ -34,4 +34,26 @@ class CourseDto {
       hasCertificate: json['hasCertificate'] as bool? ?? false,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'platform': platform,
+      'date_completed': dateCompleted,
+      'status': status,
+      'has_certificate': hasCertificate ? 1 : 0,
+    };
+  }
+
+  static CourseDto fromMap(Map<String, dynamic> map) {
+    return CourseDto(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      platform: map['platform'] as String,
+      dateCompleted: map['date_completed'] as String,
+      status: map['status'] as String,
+      hasCertificate: map['has_certificate'] == 1,
+    );
+  }
 }

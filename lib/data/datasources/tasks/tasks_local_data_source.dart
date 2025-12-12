@@ -1,51 +1,47 @@
-import 'dart:async';
+import 'package:sqflite/sqflite.dart';
+import '../local/database_helper.dart';
 import 'task_dto.dart';
 
 class TasksLocalDataSource {
-  final List<TaskDto> _tasks = [
-    TaskDto(
-      id: '1',
-      name: 'Разработать архитектуру приложения',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-    TaskDto(
-      id: '2',
-      name: 'Создать интерфейс пользователя',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-    TaskDto(
-      id: '3',
-      name: 'Протестировать функционал',
-      completed: false,
-      deadline: '',
-      category: '',
-    ),
-  ];
+  final DatabaseHelper _databaseHelper;
+
+  TasksLocalDataSource(this._databaseHelper);
 
   Future<List<TaskDto>> getAllTasks() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return List.unmodifiable(_tasks);
+    final db = await _databaseHelper.database;
+    final maps = await db.query('tasks', orderBy: 'title ASC');
+
+    return maps.map((map) => TaskDto.fromMap(map)).toList();
   }
 
   Future<void> saveTask(TaskDto task) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _tasks.add(task);
+    final db = await _databaseHelper.database;
+
+    await db.insert(
+      'tasks',
+      task.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateTask(TaskDto task) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final index = _tasks.indexWhere((t) => t.id == task.id);
-    if (index != -1) {
-      _tasks[index] = task;
-    }
+    final db = await _databaseHelper.database;
+
+    await db.update(
+      'tasks',
+      task.toMap(),
+      where: 'id = ?',
+      whereArgs: [task.id],
+    );
   }
 
   Future<void> deleteTask(String id) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _tasks.removeWhere((t) => t.id == id);
+    final db = await _databaseHelper.database;
+
+    await db.delete(
+      'tasks',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

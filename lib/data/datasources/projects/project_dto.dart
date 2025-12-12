@@ -1,45 +1,63 @@
 class ProjectDto {
   final String id;
-  final String name;
+  final String title;
   final String description;
-  final String imageUrl;
   final String status;
   final int progress;
-  final List<String> performers;
-  final String detailedDescription;
+  final String? imageUrl;
 
   ProjectDto({
     required this.id,
-    required this.name,
+    required this.title,
     required this.description,
-    required this.imageUrl,
     required this.status,
     required this.progress,
-    required this.performers,
-    required this.detailedDescription,
+    this.imageUrl,
   });
 
+  // Для JSON
   Map<String, dynamic> toJson() => {
     'id': id,
-    'name': name,
+    'title': title,
+    'name': title,
     'description': description,
-    'imageUrl': imageUrl,
     'status': status,
     'progress': progress,
-    'performers': performers,
-    'detailedDescription': detailedDescription,
+    'imageUrl': imageUrl,
+    'performers': [],
+    'detailedDescription': description,
   };
 
   static ProjectDto fromJson(Map<String, dynamic> json) {
     return ProjectDto(
       id: json['id'] as String,
-      name: json['name'] as String,
+      title: json['title'] ?? json['name'] as String,
       description: json['description'] as String,
-      imageUrl: json['imageUrl'] as String,
       status: json['status'] as String,
       progress: json['progress'] as int,
-      performers: List<String>.from(json['performers'] as List),
-      detailedDescription: json['detailedDescription'] as String,
+      imageUrl: json['imageUrl'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'status': status,
+      'progress': progress,
+      'image_url': imageUrl,
+    };
+  }
+
+  static ProjectDto fromMap(Map<String, dynamic> map) {
+    return ProjectDto(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      description: map['description'] as String,
+      status: map['status'] as String,
+      progress: map['progress'] as int,
+      imageUrl: map['image_url'] as String?,
     );
   }
 }

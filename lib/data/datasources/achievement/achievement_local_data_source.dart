@@ -1,26 +1,75 @@
-import 'dart:async';
+import 'package:sqflite/sqflite.dart';
+import '../local/database_helper.dart';
 import 'achievement_dto.dart';
 
 class AchievementLocalDataSource {
-  final List<AchievementDto> _achievements = [];
+  final DatabaseHelper _databaseHelper;
+
+  AchievementLocalDataSource(this._databaseHelper);
 
   Future<List<AchievementDto>> getAllAchievements() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return List.unmodifiable(_achievements);
+    final db = await _databaseHelper.database;
+    final maps = await db.query('achievements', orderBy: 'date DESC, title ASC');
+
+    return maps.map((map) => AchievementDto.fromMap(map)).toList();
+  }
+
+  Future<AchievementDto?> getAchievementById(String id) async {
+    final db = await _databaseHelper.database;
+    final maps = await db.query(
+      'achievements',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+    return AchievementDto.fromMap(maps.first);
   }
 
   Future<void> saveAchievement(AchievementDto achievement) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final existingIndex = _achievements.indexWhere((a) => a.id == achievement.id);
-    if (existingIndex >= 0) {
-      _achievements[existingIndex] = achievement;
-    } else {
-      _achievements.add(achievement);
-    }
+    final db = await _databaseHelper.database;
+
+    await db.insert(
+      'achievements',
+      achievement.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> deleteAchievement(String id) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _achievements.removeWhere((a) => a.id == id);
+    final db = await _databaseHelper.database;
+
+    await db.delete(
+      'achievements',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<AchievementDto>> searchAchievements(String query) async {
+    final db = await _databaseHelper.database;
+
+    final maps = await db.query(
+      'achievements',
+      where: 'title LIKE ? OR description LIKE ? OR category LIKE ?',
+      whereArgs: ['%$query%', '%$query%', '%$query%'],
+      orderBy: 'date DESC',
+    );
+
+    return maps.map((map) => AchievementDto.fromMap(map)).toList();
+  }
+
+  Future<List<AchievementDto>> getAchievementsByCategory(String category) async {
+    final db = await _databaseHelper.database;
+
+    final maps = await db.query(
+      'achievements',
+      where: 'category = ?',
+      whereArgs: [category],
+      orderBy: 'date DESC',
+    );
+
+    return maps.map((map) => AchievementDto.fromMap(map)).toList();
   }
 }

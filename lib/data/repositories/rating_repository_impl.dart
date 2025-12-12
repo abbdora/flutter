@@ -2,11 +2,13 @@ import '../../core/models/rating_comment_model.dart';
 import '../../domain/repositories/rating_repository.dart';
 import '../datasources/rating/rating_local_data_source.dart';
 import '../datasources/rating/rating_mapper.dart';
+import '../datasources/local/database_helper.dart';
 
 class RatingRepositoryImpl implements RatingRepository {
   final RatingLocalDataSource _localDataSource;
 
-  RatingRepositoryImpl(this._localDataSource);
+  RatingRepositoryImpl()
+      : _localDataSource = RatingLocalDataSource(DatabaseHelper());
 
   @override
   Future<RatingModel> getRating() async {

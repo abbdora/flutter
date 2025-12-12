@@ -5,13 +5,13 @@ extension ProjectDtoMapper on ProjectDto {
   ProjectModel toModel() {
     return ProjectModel(
       id: id,
-      name: name,
+      name: title,
       description: description,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl ?? '',
       status: status,
       progress: progress,
-      performers: performers,
-      detailedDescription: detailedDescription,
+      performers: [],
+      detailedDescription: description,
     );
   }
 }
@@ -20,13 +20,11 @@ extension ProjectModelMapper on ProjectModel {
   ProjectDto toDto() {
     return ProjectDto(
       id: id,
-      name: name,
+      title: name,
       description: description,
-      imageUrl: imageUrl,
       status: status,
       progress: progress,
-      performers: performers,
-      detailedDescription: detailedDescription,
+      imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
     );
   }
 }

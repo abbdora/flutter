@@ -1,97 +1,106 @@
-import 'dart:async';
-import 'rating_dto.dart';
+import 'package:sqflite/sqflite.dart';
+import '../local/database_helper.dart';
+import '../rating/rating_dto.dart';
+
 
 class RatingLocalDataSource {
-  RatingDto? _rating;
+  final DatabaseHelper _databaseHelper;
+
+  RatingLocalDataSource(this._databaseHelper);
 
   Future<RatingDto> getRating() async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    final db = await _databaseHelper.database;
 
-    if (_rating == null) {
-      _rating = RatingDto(
-        id: 'rating_1',
-        rating: 4.2,
-        positiveComments: [
-          RatingCommentDto(
-            id: 'positive_1',
-            text: 'Хорошая организация рабочего процесса',
-            isPositive: true,
-          ),
-          RatingCommentDto(
-            id: 'positive_2',
-            text: 'Своевременное выполнение задач',
-            isPositive: true,
-          ),
-        ],
-        negativeComments: [
-          RatingCommentDto(
-            id: 'negative_1',
-            text: 'Иногда задерживаются дедлайны',
-            isPositive: false,
-          ),
-        ],
+    final ratingRow = await db.query('rating', limit: 1);
+    if (ratingRow.isEmpty) {
+      await db.insert('rating', {'id': 'main_rating', 'value': 4.5});
+      return RatingDto(
+        id: 'main_rating',
+        rating: 4.5,
+        positiveComments: [],
+        negativeComments: [],
       );
     }
+    final ratingValue = ratingRow.first['value'] as double;
 
-    return _rating!;
+    final commentsRows = await db.query('rating_comments');
+    final positive = <RatingCommentDto>[];
+    final negative = <RatingCommentDto>[];
+
+    for (var row in commentsRows) {
+      final comment = RatingCommentDto(
+        id: row['id'] as String,
+        text: row['text'] as String,
+        isPositive: row['type'] == 'positive',
+      );
+      if (comment.isPositive) {
+        positive.add(comment);
+      } else {
+        negative.add(comment);
+      }
+    }
+
+    return RatingDto(
+      id: 'main_rating',
+      rating: ratingValue,
+      positiveComments: positive,
+      negativeComments: negative,
+    );
   }
 
   Future<void> saveRating(RatingDto rating) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _rating = rating;
+    final db = await _databaseHelper.database;
+
+    await db.update(
+      'rating',
+      {'value': rating.rating},
+      where: 'id = ?',
+      whereArgs: ['main_rating'],
+    );
+
+    await db.delete('rating_comments');
+
+    final allComments = [
+      ...rating.positiveComments.map((c) => RatingCommentDto(
+        id: c.id,
+        text: c.text,
+        isPositive: true,
+      )),
+      ...rating.negativeComments.map((c) => RatingCommentDto(
+        id: c.id,
+        text: c.text,
+        isPositive: false,
+      )),
+    ];
+
+    for (var c in allComments) {
+      await db.insert('rating_comments', {
+        'id': c.id,
+        'rating_id': 'main_rating',
+        'text': c.text,
+        'type': c.isPositive ? 'positive' : 'negative',
+        'date': DateTime.now().toIso8601String().split('T').first,
+      });
+    }
   }
 
   Future<void> addComment(String text, bool isPositive) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    final newComment = RatingCommentDto(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      text: text.trim(),
-      isPositive: isPositive,
-    );
-
-    if (isPositive) {
-      _rating = RatingDto(
-        id: _rating!.id,
-        rating: _rating!.rating,
-        positiveComments: [..._rating!.positiveComments, newComment],
-        negativeComments: _rating!.negativeComments,
-      );
-    } else {
-      _rating = RatingDto(
-        id: _rating!.id,
-        rating: _rating!.rating,
-        positiveComments: _rating!.positiveComments,
-        negativeComments: [..._rating!.negativeComments, newComment],
-      );
-    }
+    final db = await _databaseHelper.database;
+    await db.insert('rating_comments', {
+      'id': DateTime.now().microsecondsSinceEpoch.toString(),
+      'rating_id': 'main_rating',
+      'text': text.trim(),
+      'type': isPositive ? 'positive' : 'negative',
+      'date': DateTime.now().toIso8601String().split('T').first,
+    });
   }
 
   Future<void> deleteComment(String commentId, bool isPositive) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    if (isPositive) {
-      final filteredComments = _rating!.positiveComments
-          .where((comment) => comment.id != commentId)
-          .toList();
-
-      _rating = RatingDto(
-        id: _rating!.id,
-        rating: _rating!.rating,
-        positiveComments: filteredComments,
-        negativeComments: _rating!.negativeComments,
-      );
-    } else {
-      final filteredComments = _rating!.negativeComments
-          .where((comment) => comment.id != commentId)
-          .toList();
-
-      _rating = RatingDto(
-        id: _rating!.id,
-        rating: _rating!.rating,
-        positiveComments: _rating!.positiveComments,
-        negativeComments: filteredComments,
-      );
-    }
+    final db = await _databaseHelper.database;
+    await db.delete(
+      'rating_comments',
+      where: 'id = ?',
+      whereArgs: [commentId],
+    );
   }
 }

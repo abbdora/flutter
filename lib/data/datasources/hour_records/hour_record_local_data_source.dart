@@ -1,91 +1,98 @@
-import 'dart:async';
+import 'package:sqflite/sqflite.dart';
+import '../local/database_helper.dart';
 import 'hour_record_dto.dart';
 
 class HourRecordLocalDataSource {
-  final List<HourRecordDto> _hourRecords = [
-    HourRecordDto(
-      id: '1',
-      projectName: 'Мобильное приложение',
-      task: 'Разработка интерфейса',
-      hours: 3,
-      minutes: 30,
-      date: '15.01.2024',
-    ),
-    HourRecordDto(
-      id: '2',
-      projectName: 'Веб-сайт',
-      task: 'Интеграция API',
-      hours: 0,
-      minutes: 0,
-      date: '',
-    ),
-    HourRecordDto(
-      id: '3',
-      projectName: 'Документация',
-      task: 'Написание руководства',
-      hours: 1,
-      minutes: 45,
-      date: '13.01.2024',
-    ),
-    HourRecordDto(
-      id: '4',
-      projectName: 'Тестирование',
-      task: 'Функциональное тестирование',
-      hours: 4,
-      minutes: 15,
-      date: '12.01.2024',
-    ),
-    HourRecordDto(
-      id: '5',
-      projectName: 'Дизайн',
-      task: 'Создание макетов',
-      hours: 2,
-      minutes: 30,
-      date: '11.01.2024',
-    ),
-    HourRecordDto(
-      id: '6',
-      projectName: 'Совещание',
-      task: 'Планирование спринта',
-      hours: 1,
-      minutes: 0,
-      date: '10.01.2024',
-    ),
-    HourRecordDto(
-      id: '7',
-      projectName: 'База данных',
-      task: 'Оптимизация запросов',
-      hours: 3,
-      minutes: 0,
-      date: '09.01.2024',
-    ),
-    HourRecordDto(
-      id: '8',
-      projectName: 'Code Review',
-      task: 'Проверка кода команды',
-      hours: 2,
-      minutes: 20,
-      date: '08.01.2024',
-    ),
-  ];
+  final DatabaseHelper _databaseHelper;
+
+  HourRecordLocalDataSource(this._databaseHelper);
 
   Future<List<HourRecordDto>> getAllHourRecords() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return List.unmodifiable(_hourRecords);
+    final db = await _databaseHelper.database;
+    final maps = await db.query('hours', orderBy: 'date DESC');
+
+    return maps.map((map) => HourRecordDto.fromMap(map)).toList();
+  }
+
+  Future<HourRecordDto?> getHourRecordById(String id) async {
+    final db = await _databaseHelper.database;
+    final maps = await db.query(
+      'hours',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+    return HourRecordDto.fromMap(maps.first);
   }
 
   Future<void> saveHourRecord(HourRecordDto hourRecord) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    final existingIndex = _hourRecords.indexWhere((hr) => hr.id == hourRecord.id);
-    if (existingIndex >= 0) {
-      _hourRecords[existingIndex] = hourRecord;
-    } else {
-      _hourRecords.add(hourRecord);
-    }
+    final db = await _databaseHelper.database;
+
+    await db.insert(
+      'hours',
+      hourRecord.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> deleteHourRecord(String id) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _hourRecords.removeWhere((hr) => hr.id == id);
+    final db = await _databaseHelper.database;
+
+    await db.delete(
+      'hours',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<HourRecordDto>> searchHourRecords(String query) async {
+    final db = await _databaseHelper.database;
+
+    final maps = await db.query(
+      'hours',
+      where: 'project_name LIKE ? OR task LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+      orderBy: 'date DESC',
+    );
+
+    return maps.map((map) => HourRecordDto.fromMap(map)).toList();
+  }
+
+  Future<List<HourRecordDto>> getHourRecordsByProject(String projectName) async {
+    final db = await _databaseHelper.database;
+
+    final maps = await db.query(
+      'hours',
+      where: 'project_name = ?',
+      whereArgs: [projectName],
+      orderBy: 'date DESC',
+    );
+
+    return maps.map((map) => HourRecordDto.fromMap(map)).toList();
+  }
+
+  Future<List<HourRecordDto>> getHourRecordsByDate(String date) async {
+    final db = await _databaseHelper.database;
+
+    final maps = await db.query(
+      'hours',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'project_name ASC',
+    );
+
+    return maps.map((map) => HourRecordDto.fromMap(map)).toList();
+  }
+
+  Future<int> getTotalHours() async {
+    final db = await _databaseHelper.database;
+
+    final result = await db.rawQuery(
+        'SELECT SUM(hours) as total_hours FROM hours WHERE hours > 0'
+    );
+
+    return result.first['total_hours'] as int? ?? 0;
   }
 }

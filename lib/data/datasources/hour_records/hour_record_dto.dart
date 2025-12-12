@@ -34,4 +34,26 @@ class HourRecordDto {
       date: json['date'] as String,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'project_name': projectName,
+      'task': task,
+      'hours': hours,
+      'minutes': minutes,
+      'date': date,
+    };
+  }
+
+  static HourRecordDto fromMap(Map<String, dynamic> map) {
+    return HourRecordDto(
+      id: map['id'] as String,
+      projectName: map['project_name'] as String,
+      task: map['task'] as String,
+      hours: map['hours'] as int,
+      minutes: map['minutes'] as int,
+      date: map['date'] as String,
+    );
+  }
 }

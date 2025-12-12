@@ -30,4 +30,25 @@ class TaskDto {
       category: json['category'] as String,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'project_id': '1',
+      'title': name,
+      'deadline': deadline.isNotEmpty ? deadline : null,
+      'category': category.isNotEmpty ? category : null,
+      'completed': completed ? 1 : 0,
+    };
+  }
+
+  static TaskDto fromMap(Map<String, dynamic> map) {
+    return TaskDto(
+      id: map['id'] as String,
+      name: map['title'] as String,
+      completed: map['completed'] == 1,
+      deadline: map['deadline'] ?? '',
+      category: map['category'] ?? '',
+    );
+  }
 }

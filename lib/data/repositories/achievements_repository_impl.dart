@@ -24,4 +24,19 @@ class AchievementsRepositoryImpl implements AchievementsRepository {
   Future<void> deleteAchievement(String id) async {
     await _localDataSource.deleteAchievement(id);
   }
+
+  Future<AchievementModel?> getAchievementById(String id) async {
+    final dto = await _localDataSource.getAchievementById(id);
+    return dto?.toModel();
+  }
+
+  Future<List<AchievementModel>> searchAchievements(String query) async {
+    final dtos = await _localDataSource.searchAchievements(query);
+    return dtos.map((dto) => dto.toModel()).toList();
+  }
+
+  Future<List<AchievementModel>> getAchievementsByCategory(String category) async {
+    final dtos = await _localDataSource.getAchievementsByCategory(category);
+    return dtos.map((dto) => dto.toModel()).toList();
+  }
 }

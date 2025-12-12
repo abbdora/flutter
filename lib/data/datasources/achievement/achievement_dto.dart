@@ -34,4 +34,26 @@ class AchievementDto {
       imageUrl: json['imageUrl'] as String?,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'date': date,
+      'category': category,
+      'image_url': imageUrl,
+    };
+  }
+
+  static AchievementDto fromMap(Map<String, dynamic> map) {
+    return AchievementDto(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      description: map['description'] as String,
+      date: map['date'] as String,
+      category: map['category'] as String,
+      imageUrl: map['image_url'] as String?,
+    );
+  }
 }
