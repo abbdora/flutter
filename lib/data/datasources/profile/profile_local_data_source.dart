@@ -1,14 +1,17 @@
-import 'dart:async';
-import 'profile_dto.dart';
+import 'package:test_aapp/data/datasources/profile/profile_dto.dart';
+import 'package:test_aapp/data/datasources/local/preferences_helper.dart';
+import 'package:test_aapp/data/datasources/profile/profile_mapper.dart';
 
 class ProfileLocalDataSource {
-  ProfileDto? _profile;
+  final PreferencesHelper _prefsHelper;
+
+  ProfileLocalDataSource(this._prefsHelper);
 
   Future<ProfileDto> getProfile() async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    final profileModel = _prefsHelper.loadProfile();
 
-    if (_profile == null) {
-      _profile = ProfileDto(
+    if (profileModel == null) {
+      return ProfileDto(
         id: 'profile_1',
         fullName: 'не указано',
         position: 'не указано',
@@ -19,11 +22,10 @@ class ProfileLocalDataSource {
       );
     }
 
-    return _profile!;
+    return profileModel.toDto();
   }
 
   Future<void> saveProfile(ProfileDto profile) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _profile = profile;
+    await _prefsHelper.saveProfile(profile.toModel());
   }
 }
